@@ -108,7 +108,7 @@ class SearchEvaluator:
         split: str = "test",
         k: int = 100,
         dataset_filter: Optional[str] = None,
-    ) -> Dict[str, float]:
+    ) -> Tuple[Optional[Dict[str, float]], Optional[str]]:
         """
         Evaluate a single query by loading its qrels from the dataset.
         
@@ -123,7 +123,11 @@ class SearchEvaluator:
             dataset_filter: Filter by dataset name (optional, defaults to dataset_name)
         
         Returns:
-            Dictionary with evaluation metrics:
+            Tuple of (metrics_dict, error_message):
+            - metrics_dict: Dictionary with evaluation metrics (None if error occurred)
+            - error_message: Error message if query failed (None if successful)
+            
+            Metrics dictionary contains:
             - ndcg@10, ndcg@100: NDCG at ranks 10 and 100
             - mrr: Mean Reciprocal Rank
             - precision@10: Precision at rank 10
@@ -138,7 +142,7 @@ class SearchEvaluator:
         
         if not qrels:
             print(f"Warning: No qrels found for query_id {query_id}")
-            return {}
+            return None, "No qrels found"
         
         # Use dataset_name as filter if not specified
         if dataset_filter is None:
@@ -154,7 +158,7 @@ class SearchEvaluator:
         qrels: Dict[str, float],
         k: int = 100,
         dataset_filter: Optional[str] = None,
-    ) -> Dict[str, float]:
+    ) -> Tuple[Optional[Dict[str, float]], Optional[str]]:
         """
         Evaluate a single query against relevance judgments.
         
@@ -165,7 +169,11 @@ class SearchEvaluator:
             dataset_filter: Filter by dataset name (optional)
         
         Returns:
-            Dictionary with evaluation metrics:
+            Tuple of (metrics_dict, error_message):
+            - metrics_dict: Dictionary with evaluation metrics (None if error occurred)
+            - error_message: Error message if query failed (None if successful)
+            
+            Metrics dictionary contains:
             - ndcg@10, ndcg@100: NDCG at ranks 10 and 100
             - mrr: Mean Reciprocal Rank
             - precision@10: Precision at rank 10
@@ -174,10 +182,17 @@ class SearchEvaluator:
             - retrieved: Number of documents retrieved
             - relevant_in_collection: Total relevant documents
         """
-        # Perform search
-        results = self.search_engine.search(
-            query_text, limit=k, dataset_filter=dataset_filter
-        )
+        # Perform search with error handling
+        try:
+            results = self.search_engine.search(
+                query_text, limit=k, dataset_filter=dataset_filter
+            )
+        except ValueError as e:
+            # Return error message for syntax errors
+            return None, str(e)
+        except Exception as e:
+            # Catch any other unexpected errors
+            return None, f"Unexpected error: {str(e)}"
         
         # Create relevance score list for retrieved documents
         relevance_scores = []
@@ -203,7 +218,7 @@ class SearchEvaluator:
             "relevant_in_collection": total_relevant,
         }
         
-        return metrics
+        return metrics, None
     
     def evaluate_single_query_with_results(
         self,
@@ -213,7 +228,7 @@ class SearchEvaluator:
         split: str = "test",
         k: int = 100,
         dataset_filter: Optional[str] = None,
-    ) -> QuerySearchResult:
+    ) -> Tuple[Optional[QuerySearchResult], Optional[str]]:
         """
         Evaluate a single query and return both metrics and search results.
         
@@ -226,7 +241,9 @@ class SearchEvaluator:
             dataset_filter: Filter by dataset name (optional, defaults to dataset_name)
         
         Returns:
-            QuerySearchResult with search results and calculated metrics
+            Tuple of (QuerySearchResult, error_message):
+            - QuerySearchResult: Search results and calculated metrics (None if error occurred)
+            - error_message: Error message if query failed (None if successful)
         """
         # Load qrels for this specific query
         qrels_all = self.load_qrels(dataset_name, split=split)
@@ -234,11 +251,7 @@ class SearchEvaluator:
         
         if not qrels:
             print(f"Warning: No qrels found for query_id {query_id}")
-            return QuerySearchResult(
-                query_id=query_id,
-                query_text=query_text,
-                dataset_name=dataset_name,
-            )
+            return None, "No qrels found"
         
         # Use dataset_name as filter if not specified
         if dataset_filter is None:
@@ -256,7 +269,7 @@ class SearchEvaluator:
         dataset_name: str,
         k: int = 100,
         dataset_filter: Optional[str] = None,
-    ) -> QuerySearchResult:
+    ) -> Tuple[Optional[QuerySearchResult], Optional[str]]:
         """
         Evaluate a single query and return both metrics and search results.
         
@@ -269,12 +282,19 @@ class SearchEvaluator:
             dataset_filter: Filter by dataset name (optional)
         
         Returns:
-            QuerySearchResult with search results and calculated metrics
+            Tuple of (QuerySearchResult, error_message):
+            - QuerySearchResult: Search results and calculated metrics (None if error occurred)
+            - error_message: Error message if query failed (None if successful)
         """
-        # Perform search
-        raw_results = self.search_engine.search(
-            query_text, limit=k, dataset_filter=dataset_filter
-        )
+        # Perform search with error handling
+        try:
+            raw_results = self.search_engine.search(
+                query_text, limit=k, dataset_filter=dataset_filter
+            )
+        except ValueError as e:
+            return None, str(e)
+        except Exception as e:
+            return None, f"Unexpected error: {str(e)}"
         
         # Convert to SearchResult objects and attach relevance
         results = []
@@ -312,7 +332,7 @@ class SearchEvaluator:
             "map": calculate_map(relevance_scores),
         }
         
-        return QuerySearchResult(
+        query_result = QuerySearchResult(
             query_id=query_id,
             query_text=query_text,
             dataset_name=dataset_name,
@@ -321,6 +341,8 @@ class SearchEvaluator:
             num_retrieved=len(results),
             num_relevant_total=total_relevant,
         )
+        
+        return query_result, None
     
     def search(
         self,
@@ -371,7 +393,7 @@ class SearchEvaluator:
         k: int = 100,
         dataset_filter: Optional[str] = None,
         max_queries: Optional[int] = None,
-    ) -> Dict[str, float]:
+    ) -> Dict:
         """
         Evaluate search quality on a dataset.
         
@@ -383,7 +405,7 @@ class SearchEvaluator:
             max_queries: Maximum number of queries to evaluate (None for all)
         
         Returns:
-            Dictionary with average evaluation metrics across all queries
+            Dictionary with evaluation results including metrics and failed queries
         """
         print(f"\n{'=' * 60}")
         print(f"Evaluating on {dataset_name} ({split} split)")
@@ -405,96 +427,29 @@ class SearchEvaluator:
         
         # Evaluate each query
         all_metrics = defaultdict(list)
+        failed_queries = []
         
         for query_id in tqdm(valid_query_ids, desc="Evaluating queries"):
             query_text = queries[query_id]
             qrels = qrels_all[query_id]
             
-            metrics = self.evaluate_query(
+            metrics, error = self.evaluate_query(
                 query_text, qrels, k=k, dataset_filter=dataset_filter
             )
+            
+            if error:
+                # Query failed due to syntax error or other issue
+                failed_queries.append({
+                    "query_id": query_id,
+                    "query_text": query_text,
+                    "error": error
+                })
+                continue
             
             # Accumulate metrics
             for metric_name, value in metrics.items():
                 if isinstance(value, (int, float)):
                     all_metrics[metric_name].append(value)
-        
-        # Calculate averages
-        avg_metrics = {
-            metric_name: np.mean(values)
-            for metric_name, values in all_metrics.items()
-            if metric_name not in ["retrieved", "relevant_in_collection"]
-        }
-        
-        # Add summary stats
-        avg_metrics["avg_retrieved"] = np.mean(all_metrics.get("retrieved", [0]))
-        avg_metrics["avg_relevant"] = np.mean(
-            all_metrics.get("relevant_in_collection", [0])
-        )
-        avg_metrics["num_queries"] = len(valid_query_ids)
-        
-        return avg_metrics
-    
-    def evaluate_batch(
-        self,
-        queries: List[Tuple[str, str]],
-        dataset_name: str,
-        split: str = "test",
-        k: int = 100,
-        dataset_filter: Optional[str] = None,
-        show_progress: bool = True,
-    ) -> Dict[str, float]:
-        """
-        Evaluate a batch of queries efficiently.
-        
-        Args:
-            queries: List of (query_text, query_id) tuples to evaluate
-            dataset_name: Dataset name ("nfcorpus" or "scifact")
-            split: Dataset split ("train", "dev", or "test")
-            k: Maximum number of results to retrieve per query
-            dataset_filter: Filter by dataset name (optional, defaults to dataset_name)
-            show_progress: Show progress bar during evaluation
-        
-        Returns:
-            Dictionary with average evaluation metrics across all queries:
-            - ndcg@10, ndcg@100: Average NDCG at ranks 10 and 100
-            - mrr: Average Mean Reciprocal Rank
-            - precision@10: Average Precision at rank 10
-            - recall@10: Average Recall at rank 10
-            - map: Average Mean Average Precision
-            - avg_retrieved: Average number of documents retrieved
-            - avg_relevant: Average number of relevant documents
-            - num_queries: Number of queries evaluated
-        """
-        # Load all qrels once for efficiency
-        qrels_all = self.load_qrels(dataset_name, split=split)
-        
-        # Use dataset_name as filter if not specified
-        if dataset_filter is None:
-            dataset_filter = dataset_name
-        
-        # Evaluate each query
-        all_metrics = defaultdict(list)
-        
-        iterator = tqdm(queries, desc="Evaluating queries") if show_progress else queries
-        
-        for query_text, query_id in iterator:
-            qrels = qrels_all.get(query_id, {})
-            
-            if not qrels:
-                continue  # Skip queries without qrels
-            
-            metrics = self.evaluate_query(
-                query_text, qrels, k=k, dataset_filter=dataset_filter
-            )
-            
-            # Accumulate metrics
-            for metric_name, value in metrics.items():
-                if isinstance(value, (int, float)):
-                    all_metrics[metric_name].append(value)
-        
-        if not all_metrics:
-            return {}
         
         # Calculate averages
         avg_metrics = {
@@ -509,10 +464,112 @@ class SearchEvaluator:
             all_metrics.get("relevant_in_collection", [0])
         )
         avg_metrics["num_queries"] = len(all_metrics.get("retrieved", []))
+        avg_metrics["num_failed"] = len(failed_queries)
+        avg_metrics["failed_queries"] = failed_queries
         
         return avg_metrics
     
-    def print_metrics(self, metrics: Dict[str, float]):
+    def evaluate_batch(
+        self,
+        queries: List[Tuple[str, str]],
+        dataset_name: str,
+        split: str = "test",
+        k: int = 100,
+        dataset_filter: Optional[str] = None,
+        show_progress: bool = True,
+    ) -> Dict:
+        """
+        Evaluate a batch of queries efficiently.
+        
+        Args:
+            queries: List of (query_text, query_id) tuples to evaluate
+            dataset_name: Dataset name ("nfcorpus" or "scifact")
+            split: Dataset split ("train", "dev", or "test")
+            k: Maximum number of results to retrieve per query
+            dataset_filter: Filter by dataset name (optional, defaults to dataset_name)
+            show_progress: Show progress bar during evaluation
+        
+        Returns:
+            Dictionary with evaluation results:
+            - ndcg@10, ndcg@100: Average NDCG at ranks 10 and 100
+            - mrr: Average Mean Reciprocal Rank
+            - precision@10: Average Precision at rank 10
+            - recall@10: Average Recall at rank 10
+            - map: Average Mean Average Precision
+            - avg_retrieved: Average number of documents retrieved
+            - avg_relevant: Average number of relevant documents
+            - num_queries: Number of queries successfully evaluated
+            - num_failed: Number of queries that failed
+            - failed_queries: List of dicts with 'query_id', 'query_text', and 'error' for failed queries
+        """
+        # Load all qrels once for efficiency
+        qrels_all = self.load_qrels(dataset_name, split=split)
+        
+        # Use dataset_name as filter if not specified
+        if dataset_filter is None:
+            dataset_filter = dataset_name
+        
+        # Evaluate each query
+        all_metrics = defaultdict(list)
+        failed_queries = []
+        
+        iterator = tqdm(queries, desc="Evaluating queries") if show_progress else queries
+        
+        for query_text, query_id in iterator:
+            qrels = qrels_all.get(query_id, {})
+            
+            if not qrels:
+                failed_queries.append({
+                    "query_id": query_id,
+                    "query_text": query_text,
+                    "error": "No qrels found"
+                })
+                continue
+            
+            metrics, error = self.evaluate_query(
+                query_text, qrels, k=k, dataset_filter=dataset_filter
+            )
+            
+            if error:
+                # Query failed due to syntax error or other issue
+                failed_queries.append({
+                    "query_id": query_id,
+                    "query_text": query_text,
+                    "error": error
+                })
+                continue
+            
+            # Accumulate metrics
+            for metric_name, value in metrics.items():
+                if isinstance(value, (int, float)):
+                    all_metrics[metric_name].append(value)
+        
+        if not all_metrics:
+            return {
+                "num_queries": 0,
+                "num_failed": len(failed_queries),
+                "failed_queries": failed_queries,
+            }
+        
+        # Calculate averages
+        avg_metrics = {
+            metric_name: np.mean(values)
+            for metric_name, values in all_metrics.items()
+            if metric_name not in ["retrieved", "relevant_in_collection"]
+        }
+        
+        # Add summary stats
+        avg_metrics["avg_retrieved"] = np.mean(all_metrics.get("retrieved", [0]))
+        avg_metrics["avg_relevant"] = np.mean(
+            all_metrics.get("relevant_in_collection", [0])
+        )
+        avg_metrics["num_queries"] = len(all_metrics.get("retrieved", []))
+        avg_metrics["num_failed"] = len(failed_queries)
+        avg_metrics["failed_queries"] = failed_queries
+        
+        return avg_metrics
+    
+    def print_metrics(self, metrics: Dict):
         """
         Print evaluation metrics in a formatted way.
         
@@ -523,6 +580,12 @@ class SearchEvaluator:
         print("Evaluation Results")
         print("=" * 60)
         print(f"Number of queries: {metrics.get('num_queries', 0):.0f}")
+        
+        # Print failed queries info if present
+        num_failed = metrics.get('num_failed', 0)
+        if num_failed > 0:
+            print(f"Number of failed queries: {num_failed}")
+        
         print(f"Average relevant docs per query: {metrics.get('avg_relevant', 0):.2f}")
         print(
             f"Average retrieved docs per query: {metrics.get('avg_retrieved', 0):.2f}"
@@ -534,4 +597,19 @@ class SearchEvaluator:
         print(f"  Precision@10: {metrics.get('precision@10', 0):.4f}")
         print(f"  Recall@10:    {metrics.get('recall@10', 0):.4f}")
         print(f"  MAP:      {metrics.get('map', 0):.4f}")
+        
+        # Print failed queries details if present
+        failed_queries = metrics.get('failed_queries', [])
+        if failed_queries:
+            print("\n" + "=" * 60)
+            print(f"Failed Queries ({len(failed_queries)}):")
+            print("=" * 60)
+            for i, failed in enumerate(failed_queries[:10], 1):  # Show first 10
+                print(f"\n{i}. Query ID: {failed['query_id']}")
+                print(f"   Query: {failed['query_text'][:80]}...")
+                print(f"   Error: {failed['error']}")
+            
+            if len(failed_queries) > 10:
+                print(f"\n... and {len(failed_queries) - 10} more failed queries")
+        
         print("=" * 60 + "\n")
