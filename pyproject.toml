@@ -1,0 +1,38 @@
+[project]
+name = "searchlm"
+version = "0.1.0"
+description = "SearchLM - post training a LLM with Reinforcement Learning with Verifiable Rewards (RLVR) to generate better boolean search queries"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=4.5.0",
+    "modal>=1.3.1",
+    "tantivy>=0.25.1",
+    "tqdm>=4.66.0",
+    "numpy>=1.24.0",
+]
+authors = [
+    { name="Supreeth Rao", email="raosupreeth00@gmail.com" },
+]
+license = { text = "MIT" }
+keywords = [
+    "search",
+    "information retrieval",
+    "reinforcement learning",
+    "verifiable rewards",
+    "RLVR",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.1.0",
+    "ipywidgets>=8.1.8",
+]
