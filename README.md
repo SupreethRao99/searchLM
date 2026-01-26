@@ -158,34 +158,45 @@ evaluator.print_metrics(results)
 Generate baseline queries using instruction-tuned LLMs:
 
 ```bash
-# Generate queries for SciFact
-uv run python -m searchlm.workflows.baseline.cli
+# Generate queries for SciFact (default)
+uv run python -m searchlm.workflows.baseline.baseline
 
-# Generate queries for NFCorpus
-uv run python -m searchlm.workflows.baseline.cli \
-  --dataset-name mteb/nfcorpus \
-  --output-filename nfcorpus_queries.tsv
+# Or use the class directly in Python:
+from searchlm.workflows.baseline.baseline import BaselineGenerator
+
+# SciFact
+generator = BaselineGenerator(
+    dataset_name="mteb/scifact",
+    output_filename="scifact_generated_queries.tsv"
+)
+generator.generate()
+
+# NFCorpus
+generator = BaselineGenerator(
+    dataset_name="mteb/nfcorpus",
+    output_filename="nfcorpus_generated_queries.tsv"
+)
+generator.generate()
 ```
 
 ### RLHF Training
 
 Train models using Group Relative Policy Optimization (GRPO):
 
-```bash
-# 1. Prepare training data
-uv run python -m searchlm.workflows.rlhf.cli prep
+```python
+from searchlm.workflows.rlhf.data_prep import prepare_training_data
+from searchlm.workflows.rlhf.training import train
+from searchlm.workflows.rlhf.evaluation import evaluate
 
-# 2. Train the model (1 GPU)
-uv run python -m searchlm.workflows.rlhf.cli train
+# Step 1: Prepare training data
+prepare_training_data()
 
-# 3. Train with vLLM server mode (2 GPUs)
-uv run python -m searchlm.workflows.rlhf.cli train --use-vllm-server
+# Step 2: Train (choose mode)
+train(use_vllm_server=False)  # 1 GPU mode (colocate)
+# train(use_vllm_server=True)  # 2 GPU mode (server)
 
-# 4. Evaluate trained model
-uv run python -m searchlm.workflows.rlhf.cli eval
-
-# 5. Compare with baseline
-uv run python -m searchlm.workflows.rlhf.cli eval --compare-baseline
+# Step 3: Evaluate
+evaluate(compare_baseline=True)
 ```
 
 ## Documentation
@@ -233,13 +244,12 @@ searchlm/
 │   │   └── evaluation.py        # Evaluation models
 │   └── workflows/
 │       ├── baseline/
-│       │   ├── cli.py           # Baseline CLI
-│       │   └── sampling.py      # Uses VllmEngine (removed custom Vllm)
+│       │   └── baseline.py      # BaselineGenerator class (merged CLI + sampling)
 │       └── rlhf/
-│           ├── cli.py           # RLHF CLI
-│           ├── data_prep.py     # Uses shared prompts
-│           ├── evaluation.py    # Uses shared prompts
-│           └── training.py      # GRPO training
+│           ├── data_prep.py     # Training data preparation
+│           ├── reward.py        # Reward function for GRPO
+│           ├── training.py      # GRPO training
+│           └── evaluation.py    # Model evaluation
 ├── config/
 │   └── default.yaml             # Configuration file
 ├── scripts/
@@ -254,6 +264,9 @@ searchlm/
 - ✅ Added shared helpers to reduce code duplication (~250 lines saved)
 - ✅ Simplified SearchEvaluator (78 lines saved)
 - ✅ Consolidated prompt utilities across workflows
+- ✅ Merged baseline: CLI + sampling → single `BaselineGenerator` class (2 files → 1)
+- ✅ Simplified RLHF: Removed CLI argparse, clean separation of concerns (4 files)
+- ✅ All imports at the top of files (no lazy imports)
 - ✅ Fixed config.py cache bug
 
 ## Supported Datasets

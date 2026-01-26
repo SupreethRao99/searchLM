@@ -1,33 +1,28 @@
-"""
-Data preparation for GRPO training.
-
-This module prepares training data from SciFact and NFCorpus datasets,
-formatting them as HuggingFace Datasets with prompts and metadata for
-reward computation.
-"""
+"""Data preparation for GRPO training."""
 
 from pathlib import Path
 
+from datasets import Dataset
+from transformers import AutoTokenizer
+
+from searchlm import create_loader
 from searchlm.config import get_config
 from searchlm.prompts import create_chat_prompt
 
-config = get_config()
 
-# Data directory
-DATA_DIR = Path(config.paths.data_dir)
+def prepare_training_data():
+    """Prepare training data from SciFact and NFCorpus datasets."""
+    config = get_config()
+    data_dir = Path(config.paths.data_dir)
 
-
-def prep_dataset():
-    """Prepare training data as HuggingFace Dataset."""
-    from datasets import Dataset
-    from transformers import AutoTokenizer
-
-    from searchlm import create_loader
+    print("=" * 60)
+    print("Preparing training data")
+    print("=" * 60)
 
     # Ensure data directory exists
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    data_dir.mkdir(parents=True, exist_ok=True)
 
-    # Initialize tokenizer for chat template
+    # Initialize tokenizer
     print(f"Loading tokenizer for {config.model.name}...")
     tokenizer = AutoTokenizer.from_pretrained(config.model.name)
 
@@ -43,14 +38,12 @@ def prep_dataset():
             print(f"  {split}: {len(dataset_split.queries)} queries")
 
             for query_id, query in dataset_split.queries.items():
-                # Format prompt with chat template
                 prompt = create_chat_prompt(query.text, tokenizer)
-
                 all_data.append(
                     {
                         "prompt": prompt,
-                        "query_id": query_id,  # For reward function
-                        "dataset_name": dataset_name,  # For reward function
+                        "query_id": query_id,
+                        "dataset_name": dataset_name,
                     }
                 )
 
@@ -66,9 +59,9 @@ def prep_dataset():
     test_dataset = dataset.select(range(split_idx, len(dataset)))
 
     # Save to disk
-    print(f"\nSaving to {DATA_DIR}...")
-    train_dataset.save_to_disk(str(DATA_DIR / "train"))
-    test_dataset.save_to_disk(str(DATA_DIR / "test"))
+    print(f"\nSaving to {data_dir}...")
+    train_dataset.save_to_disk(str(data_dir / "train"))
+    test_dataset.save_to_disk(str(data_dir / "test"))
 
     print(f"✓ Saved {len(train_dataset)} training examples")
     print(f"✓ Saved {len(test_dataset)} validation examples")

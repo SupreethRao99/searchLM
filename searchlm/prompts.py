@@ -56,11 +56,11 @@ def format_user_prompt(question: str) -> str:
 def create_chat_prompt(query_text: str, tokenizer) -> str:
     """
     Create formatted chat prompt for query generation.
-    
+
     Args:
         query_text: The query text to format
         tokenizer: Tokenizer with apply_chat_template method
-        
+
     Returns:
         Formatted chat prompt string
     """
@@ -76,10 +76,10 @@ def create_chat_prompt(query_text: str, tokenizer) -> str:
 def extract_query_from_output(text: str) -> str:
     """
     Extract query from model output (between <query> tags).
-    
+
     Args:
         text: Model output text
-        
+
     Returns:
         Extracted query or original text if no tags found
     """

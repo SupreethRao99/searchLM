@@ -30,7 +30,9 @@ class SciFactLoader(DatasetLoader):
                 continue
 
             title = get_field_with_fallbacks(item, "title", "Title")
-            text = get_field_with_fallbacks(item, "abstract", "text", "content", "Abstract")
+            text = get_field_with_fallbacks(
+                item, "abstract", "text", "content", "Abstract"
+            )
 
             doc = Document(
                 doc_id=doc_id,

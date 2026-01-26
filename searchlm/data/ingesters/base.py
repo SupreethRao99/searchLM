@@ -135,14 +135,16 @@ class DatasetIngester:
         self.index.reload()
         print("Index committed and reloaded")
 
-    def prepare_documents(self, corpus_dict: Dict[str, Any], dataset_name: str) -> List[Dict[str, str]]:
+    def prepare_documents(
+        self, corpus_dict: Dict[str, Any], dataset_name: str
+    ) -> List[Dict[str, str]]:
         """
         Convert corpus documents to indexable format.
-        
+
         Args:
             corpus_dict: Dictionary mapping doc_id -> Document object
             dataset_name: Name of the dataset
-            
+
         Returns:
             List of document dictionaries ready for indexing
         """

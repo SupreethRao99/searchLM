@@ -34,10 +34,10 @@ def create_loader(dataset_name: str, cache_dir: Optional[Path] = None) -> Datase
         ValueError: If dataset_name is not recognized
     """
     dataset_name = dataset_name.lower()
-    
+
     if dataset_name not in DATASET_LOADERS:
         raise ValueError(
             f"Unknown dataset: {dataset_name}. Available: {list(DATASET_LOADERS.keys())}"
         )
-    
+
     return DATASET_LOADERS[dataset_name](cache_dir=cache_dir)

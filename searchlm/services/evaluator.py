@@ -75,18 +75,18 @@ class SearchEvaluator:
     ) -> Tuple[List[SearchResult], List[float]]:
         """
         Convert raw search results to SearchResult objects.
-        
+
         Returns:
             Tuple of (search_results, relevance_scores)
         """
         results = []
         relevance_scores = []
-        
+
         for rank, result in enumerate(raw_results, start=1):
             doc_id = result["doc_id"]
             relevance = qrels.get(doc_id, 0.0) if qrels else 0.0
             relevance_scores.append(relevance)
-            
+
             search_result = SearchResult(
                 doc_id=doc_id,
                 title=result["title"],
@@ -97,7 +97,7 @@ class SearchEvaluator:
                 rank=rank,
             )
             results.append(search_result)
-        
+
         return results, relevance_scores
 
     def load_qrels(
@@ -181,8 +181,13 @@ class SearchEvaluator:
             dataset_filter = dataset_name
 
         return self.evaluate_query(
-            query_text, qrels, k=k, dataset_filter=dataset_filter,
-            return_results=return_results, query_id=query_id, dataset_name=dataset_name
+            query_text,
+            qrels,
+            k=k,
+            dataset_filter=dataset_filter,
+            return_results=return_results,
+            query_id=query_id,
+            dataset_name=dataset_name,
         )
 
     def evaluate_query(
@@ -236,8 +241,11 @@ class SearchEvaluator:
         if return_results:
             # Return full QuerySearchResult object
             if not query_id or not dataset_name:
-                return None, "query_id and dataset_name required when return_results=True"
-            
+                return (
+                    None,
+                    "query_id and dataset_name required when return_results=True",
+                )
+
             query_result = QuerySearchResult(
                 query_id=query_id,
                 query_text=query_text,
@@ -278,8 +286,13 @@ class SearchEvaluator:
             Tuple of (QuerySearchResult, error_message)
         """
         return self.evaluate_single_query(
-            query_text, query_id, dataset_name, split, k, dataset_filter,
-            return_results=True
+            query_text,
+            query_id,
+            dataset_name,
+            split,
+            k,
+            dataset_filter,
+            return_results=True,
         )
 
     def evaluate_query_with_results(
@@ -308,8 +321,13 @@ class SearchEvaluator:
             Tuple of (QuerySearchResult, error_message)
         """
         return self.evaluate_query(
-            query_text, qrels, k, dataset_filter,
-            return_results=True, query_id=query_id, dataset_name=dataset_name
+            query_text,
+            qrels,
+            k,
+            dataset_filter,
+            return_results=True,
+            query_id=query_id,
+            dataset_name=dataset_name,
         )
 
     def search(

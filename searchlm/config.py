@@ -39,7 +39,7 @@ def load_config(config_path: Optional[str] = None) -> DictConfig:
     if _config is None or (_config_path != config_path):
         if not config_path.exists():
             raise FileNotFoundError(f"Config file not found: {config_path}")
-        
+
         _config = OmegaConf.load(config_path)
         _config_path = config_path
 

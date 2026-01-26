@@ -2,6 +2,8 @@
 
 from typing import List, Optional
 
+from vllm import LLM, SamplingParams
+
 from searchlm.config import get_config
 
 
@@ -21,23 +23,8 @@ class VllmEngine:
         config = get_config()
         self.model_name = model_name or config.model.name
         self.max_model_len = max_model_len or config.model.max_model_len
-        self.llm = None
-        self.tokenizer = None
-
-    def __enter__(self):
-        """Start the vLLM engine (context manager entry)"""
-        from vllm import LLM
-
         self.llm = LLM(model=self.model_name, max_model_len=self.max_model_len)
         self.tokenizer = self.llm.get_tokenizer()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Stop the vLLM engine (context manager exit)"""
-        if self.llm is not None:
-            del self.llm
-            self.llm = None
-        return False
 
     def generate(
         self,
@@ -58,18 +45,9 @@ class VllmEngine:
         Returns:
             List of generated text completions
         """
-        if self.llm is None:
-            raise RuntimeError(
-                "VllmEngine not started. "
-                "Use as context manager: with VllmEngine() as engine:"
-            )
-
-        from vllm import SamplingParams
-
-        config = get_config()
         sampling_params = SamplingParams(
-            temperature=temperature or config.model.temperature,
-            max_tokens=max_tokens or config.model.max_tokens,
+            temperature=temperature or self.config.model.temperature,
+            max_tokens=max_tokens or self.config.model.max_tokens,
             **kwargs,
         )
 

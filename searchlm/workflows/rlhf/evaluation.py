@@ -1,53 +1,50 @@
-"""
-Evaluation script for GRPO-trained models.
-
-This module evaluates trained checkpoints on test splits using vLLM for fast inference
-and SearchEvaluator for computing IR metrics.
-"""
+"""Evaluation for GRPO-trained models."""
 
 from pathlib import Path
 
+from transformers import AutoTokenizer
+from vllm import LLM, SamplingParams
+
+from searchlm import SearchEvaluator, create_loader
 from searchlm.config import get_config
 from searchlm.prompts import create_chat_prompt, extract_query_from_output
 
-config = get_config()
 
-# Directories
-MODELS_DIR = Path(config.paths.models_dir)
-INDEX_DIR = Path(config.paths.index_dir)
-
-
-def get_latest_checkpoint():
+def get_latest_checkpoint() -> str:
     """Get path to latest checkpoint."""
+    config = get_config()
+    models_dir = Path(config.paths.models_dir)
+
     checkpoint_dirs = [
         d
-        for d in MODELS_DIR.iterdir()
+        for d in models_dir.iterdir()
         if d.is_dir() and d.name.startswith("checkpoint-")
     ]
     if not checkpoint_dirs:
-        return str(MODELS_DIR / "final")
+        return str(models_dir / "final")
 
     # Get highest checkpoint number
     latest = max(checkpoint_dirs, key=lambda d: int(d.name.split("-")[1]))
     return str(latest)
 
 
-
-
-def evaluate(checkpoint_path: str = None):
+def evaluate(checkpoint_path: str = None, compare_baseline: bool = False):
     """
     Evaluate a trained checkpoint on test splits.
 
     Args:
-        checkpoint_path: Path to checkpoint. If None, uses latest checkpoint.
+        checkpoint_path: Path to checkpoint. If None, uses latest.
+        compare_baseline: If True, show baseline comparison message.
 
     Returns:
         Dictionary with evaluation results for both datasets.
     """
-    from transformers import AutoTokenizer
-    from vllm import LLM, SamplingParams
+    config = get_config()
+    index_dir = Path(config.paths.index_dir)
 
-    from searchlm import SearchEvaluator, create_loader
+    print("\n" + "=" * 60)
+    print("SearchLM GRPO Model Evaluation")
+    print("=" * 60)
 
     # Load checkpoint
     if checkpoint_path is None:
@@ -63,7 +60,7 @@ def evaluate(checkpoint_path: str = None):
     )
 
     # Initialize evaluator
-    evaluator = SearchEvaluator(index_path=str(INDEX_DIR))
+    evaluator = SearchEvaluator(index_path=str(index_dir))
     tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
 
     results = {}
@@ -77,7 +74,7 @@ def evaluate(checkpoint_path: str = None):
         loader = create_loader(dataset_name)
         test_split = loader.load_split(split="test")
 
-        # Format prompts
+        # Format prompts and generate
         prompts = []
         query_ids = []
         for qid, query in test_split.queries.items():
@@ -85,15 +82,14 @@ def evaluate(checkpoint_path: str = None):
             prompts.append(prompt)
             query_ids.append(qid)
 
-        # Generate
         print(f"Generating {len(prompts)} queries...")
         outputs = llm.generate(prompts, sampling_params)
 
         # Extract queries
-        generated_queries = []
-        for output, qid in zip(outputs, query_ids):
-            query_text = extract_query_from_output(output.outputs[0].text)
-            generated_queries.append((query_text, qid))
+        generated_queries = [
+            (extract_query_from_output(output.outputs[0].text), qid)
+            for output, qid in zip(outputs, query_ids)
+        ]
 
         # Batch evaluation
         print(f"Evaluating {len(generated_queries)} queries...")
@@ -107,35 +103,33 @@ def evaluate(checkpoint_path: str = None):
         evaluator.print_metrics(metrics)
         results[dataset_name] = metrics
 
-    return results
-
-
-def compare_with_baseline(checkpoint_path: str = None):
-    """
-    Compare trained model with baseline on test splits.
-
-    This function evaluates both the trained model and generates a comparison
-    report showing improvements over the baseline.
-
-    Args:
-        checkpoint_path: Path to checkpoint. If None, uses latest checkpoint.
-
-    Returns:
-        Dictionary with comparison results.
-    """
-
-    # First evaluate the trained model
-    trained_results = evaluate(checkpoint_path)
-
+    # Print final results
     print("\n" + "=" * 60)
-    print("COMPARISON WITH BASELINE")
+    print("FINAL RESULTS")
     print("=" * 60)
 
-    # Note: You would load baseline results from a saved file or run baseline evaluation
-    # For now, we just return the trained model results
-    print("\nTo compare with baseline:")
-    print("1. Run scripts/base_evaluation.py to get baseline metrics")
-    print("2. Compare the numbers above with baseline results")
-    print("3. Look for improvements in NDCG@10 and MRR")
+    for dataset, metrics in results.items():
+        print(f"\n{dataset.upper()}:")
+        print(f"  NDCG@10:  {metrics['ndcg@10']:.4f}")
+        print(f"  NDCG@100: {metrics['ndcg@100']:.4f}")
+        print(f"  MRR:      {metrics['mrr']:.4f}")
+        print(f"  MAP:      {metrics['map']:.4f}")
+        print(f"  Precision@10: {metrics['precision@10']:.4f}")
+        print(f"  Recall@10:    {metrics['recall@10']:.4f}")
+        total = metrics["num_queries"] + metrics["num_failed"]
+        print(f"  Failed: {metrics['num_failed']}/{total}")
 
-    return trained_results
+    if compare_baseline:
+        print("\n" + "=" * 60)
+        print("COMPARISON WITH BASELINE")
+        print("=" * 60)
+        print("\nTo compare with baseline:")
+        print("1. Run baseline generation to get baseline metrics")
+        print("2. Compare the numbers above with baseline results")
+        print("3. Look for improvements in NDCG@10 and MRR")
+
+    print("\n" + "=" * 60)
+    print("Evaluation complete!")
+    print("=" * 60 + "\n")
+
+    return results
