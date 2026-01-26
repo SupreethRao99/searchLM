@@ -11,7 +11,9 @@ from typing import Any, Dict, List
 import tantivy
 
 from searchlm.data.schemas import (
+    FIELD_DATASET,
     FIELD_DOC_ID,
+    FIELD_SOURCE_ID,
     FIELD_TEXT,
     FIELD_TITLE,
     IndexSchema,
@@ -132,6 +134,28 @@ class DatasetIngester:
         self.writer.wait_merging_threads()
         self.index.reload()
         print("Index committed and reloaded")
+
+    def prepare_documents(self, corpus_dict: Dict[str, Any], dataset_name: str) -> List[Dict[str, str]]:
+        """
+        Convert corpus documents to indexable format.
+        
+        Args:
+            corpus_dict: Dictionary mapping doc_id -> Document object
+            dataset_name: Name of the dataset
+            
+        Returns:
+            List of document dictionaries ready for indexing
+        """
+        return [
+            {
+                FIELD_DOC_ID: doc.doc_id,
+                FIELD_TITLE: doc.title,
+                FIELD_TEXT: doc.text,
+                FIELD_DATASET: dataset_name,
+                FIELD_SOURCE_ID: doc.doc_id,
+            }
+            for doc in corpus_dict.values()
+        ]
 
     def ingest(self):
         """

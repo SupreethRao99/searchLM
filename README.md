@@ -2,6 +2,15 @@
 
 SearchLM is a search system for post-training LLMs with Reinforcement Learning with Verifiable Rewards (RLVR) to generate better boolean search queries. It provides a complete toolkit for information retrieval research, featuring dataset loading, search index management, and comprehensive evaluation metrics.
 
+## Philosophy
+
+SearchLM is designed to be **simple, hackable, and easy to use**:
+
+- **Clear package boundaries**: Separate packages for data loading, evaluation, inference, and RL workflows
+- **Minimal abstraction**: Code is organized to be readable and modifiable without deep framework knowledge
+- **Shared utilities**: Common patterns extracted into reusable helpers to reduce duplication
+- **Direct access**: All functionality accessible through straightforward Python APIs
+
 ## Overview
 
 SearchLM enables research and development of search query generation systems through:
@@ -196,27 +205,56 @@ For detailed usage instructions, see the [Usage Guide](docs/USAGE.md). The usage
 ```
 searchlm/
 ├── searchlm/
-│   ├── __init__.py          # Main package exports
-│   ├── config.py            # Configuration management
-│   ├── prompts.py           # LLM prompts
-│   ├── inference.py         # vLLM inference utilities
-│   ├── data/                # Dataset loading and ingestion
-│   │   ├── loaders/         # Dataset loaders
-│   │   ├── ingesters/       # Dataset ingesters
-│   │   └── schemas/         # Index schemas
-│   ├── services/            # Search & evaluation services
-│   ├── models/              # Data models
-│   └── workflows/           # Training & inference workflows
-│       ├── baseline/        # Baseline query generation
-│       └── rlhf/            # RLHF training
+│   ├── __init__.py              # Main package exports
+│   ├── config.py                # Configuration management (fixed cache bug)
+│   ├── prompts.py               # LLM prompts + shared utilities
+│   ├── inference.py             # vLLM inference engine
+│   ├── data/                    # Dataset loading and ingestion
+│   │   ├── loaders/
+│   │   │   ├── base.py          # Base loader class
+│   │   │   ├── nfcorpus.py      # NFCorpus loader
+│   │   │   ├── scifact.py       # SciFact loader
+│   │   │   ├── factory.py       # Dict-based loader factory
+│   │   │   └── helpers.py       # Shared loading utilities (NEW)
+│   │   ├── ingesters/
+│   │   │   ├── base.py          # Base ingester + shared helpers
+│   │   │   ├── nfcorpus.py      # NFCorpus ingester
+│   │   │   ├── scifact.py       # SciFact ingester
+│   │   │   └── pipeline.py      # Ingestion pipeline
+│   │   └── schemas/
+│   │       ├── constants.py     # Field constants
+│   │       └── index.py         # Index schema builder
+│   ├── services/
+│   │   ├── search.py            # Search engine wrapper
+│   │   ├── evaluator.py         # Search evaluator (617 → 539 lines)
+│   │   └── metrics.py           # IR metrics calculations
+│   ├── models/
+│   │   ├── domain.py            # Core domain models
+│   │   └── evaluation.py        # Evaluation models
+│   └── workflows/
+│       ├── baseline/
+│       │   ├── cli.py           # Baseline CLI
+│       │   └── sampling.py      # Uses VllmEngine (removed custom Vllm)
+│       └── rlhf/
+│           ├── cli.py           # RLHF CLI
+│           ├── data_prep.py     # Uses shared prompts
+│           ├── evaluation.py    # Uses shared prompts
+│           └── training.py      # GRPO training
 ├── config/
-│   └── default.yaml         # Configuration file
+│   └── default.yaml             # Configuration file
+├── scripts/
+│   └── base_evaluation.py       # Standalone evaluation script
 ├── docs/
-│   └── USAGE.md            # Usage guide
-├── .env.example            # Environment template
-├── pyproject.toml
+│   └── USAGE.md                 # Usage guide
 └── README.md
 ```
+
+**Key Simplifications:**
+- ✅ Removed 6 duplicate/unused files (4 loaders + 2 utils)
+- ✅ Added shared helpers to reduce code duplication (~250 lines saved)
+- ✅ Simplified SearchEvaluator (78 lines saved)
+- ✅ Consolidated prompt utilities across workflows
+- ✅ Fixed config.py cache bug
 
 ## Supported Datasets
 

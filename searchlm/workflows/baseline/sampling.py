@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from searchlm.config import get_config
-from searchlm.prompts import SYSTEM_PROMPT, format_user_prompt
+from searchlm.inference import VllmEngine
+from searchlm.prompts import create_chat_prompt
 
 config = get_config()
 
@@ -26,77 +27,23 @@ class SearchQuery:
 output_root = Path(config.paths.output_dir)
 
 
-class Vllm:
-    """vLLM inference engine for batch processing"""
+def process_queries(engine: VllmEngine, queries: list[SearchQuery]) -> list[SearchQuery]:
+    """Process a batch of queries through the LLM"""
+    # Build prompts using the shared utility
+    prompts = [create_chat_prompt(query.text, engine.tokenizer) for query in queries]
 
-    def __init__(self):
-        self.llm = None
-        self.sampling_params = None
+    # Generate responses
+    start = time.time()
+    responses = engine.generate(prompts, max_tokens=config.baseline.max_tokens)
+    duration_s = time.time() - start
 
-    def __enter__(self):
-        """Start the vLLM engine"""
-        import vllm
+    print(f"Generated {len(responses)} responses in {int(duration_s)} seconds")
 
-        vllm_throughput_kwargs = {
-            "max_model_len": config.model.max_model_len,
-        }
+    # Attach responses to queries
+    for response, query in zip(responses, queries):
+        query.query = response
 
-        self.llm = vllm.LLM(model=config.model.name, **vllm_throughput_kwargs)
-        self.sampling_params = self.llm.get_default_sampling_params()
-        self.sampling_params.max_tokens = config.baseline.max_tokens
-
-        # Test the LLM
-        print("Testing LLM connection...")
-        self.llm.chat([{"role": "user", "content": "Is this thing on?"}])
-        print("LLM ready!")
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Stop the vLLM engine"""
-        if self.llm is not None:
-            del self.llm
-            self.llm = None
-        return False
-
-    def process(self, queries: list[SearchQuery]) -> list[SearchQuery]:
-        """Process a batch of queries through the LLM"""
-        if self.llm is None:
-            raise RuntimeError(
-                "Vllm not started. Use as context manager: with Vllm() as llm:"
-            )
-
-        messages = []
-        for query in queries:
-            messages.append(
-                [
-                    {
-                        "role": "system",
-                        "content": SYSTEM_PROMPT,
-                    },
-                    {
-                        "role": "user",
-                        "content": format_user_prompt(query.text),
-                    },
-                ]
-            )
-
-        start = time.time()
-        responses = self.llm.chat(messages, sampling_params=self.sampling_params)
-        duration_s = time.time() - start
-
-        in_token_count = sum(len(response.prompt_token_ids) for response in responses)
-        out_token_count = sum(
-            len(response.outputs[0].token_ids) for response in responses
-        )
-
-        print(f"processed {in_token_count} prompt tokens in {int(duration_s)} seconds")
-        print(f"generated {out_token_count} output tokens in {int(duration_s)} seconds")
-
-        for response, query in zip(responses, queries):
-            query.query = response.outputs[0].text
-
-        return queries
+    return queries
 
 
 def extract(dataset_name: str, subset: str, split: str) -> list[dict]:
@@ -172,10 +119,10 @@ def orchestrate(
 
     # Process batches with LLM
     all_results = []
-    with Vllm() as llm:
+    with VllmEngine() as engine:
         for i, batch in enumerate(query_batches):
             print(f"Processing batch {i + 1}/{len(query_batches)}")
-            results = llm.process(batch)
+            results = process_queries(engine, batch)
             all_results.extend(results)
 
     # Save results

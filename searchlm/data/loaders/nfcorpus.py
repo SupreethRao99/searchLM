@@ -4,6 +4,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 from searchlm.data.loaders.base import DatasetLoader
+from searchlm.data.loaders.helpers import get_field_with_fallbacks
 from searchlm.models import Document, Query
 
 
@@ -24,7 +25,7 @@ class NFCorpusLoader(DatasetLoader):
 
         documents = {}
         for item in tqdm(corpus, desc="Processing documents"):
-            doc_id = str(item.get("_id") or item.get("id", ""))
+            doc_id = get_field_with_fallbacks(item, "_id", "id")
             if not doc_id:
                 continue
 
@@ -69,8 +70,8 @@ class NFCorpusLoader(DatasetLoader):
         # Build dict of all queries
         all_queries = {}
         for item in tqdm(all_queries_data, desc="Loading all queries"):
-            query_id = str(item.get("_id") or item.get("id", ""))
-            query_text = item.get("text", item.get("query", ""))
+            query_id = get_field_with_fallbacks(item, "_id", "id")
+            query_text = get_field_with_fallbacks(item, "text", "query")
 
             if not query_id or not query_text:
                 continue
@@ -105,11 +106,9 @@ class NFCorpusLoader(DatasetLoader):
 
         qrels = {}
         for item in tqdm(qrels_dataset, desc="Processing qrels"):
-            query_id = str(item.get("query-id", item.get("query_id", "")))
-            doc_id = str(
-                item.get("corpus-id", item.get("corpus_id", item.get("doc-id", "")))
-            )
-            score = float(item.get("score", item.get("relevance", 0.0)))
+            query_id = get_field_with_fallbacks(item, "query-id", "query_id")
+            doc_id = get_field_with_fallbacks(item, "corpus-id", "corpus_id", "doc-id")
+            score = float(item.get("score") or item.get("relevance") or 0.0)
 
             if not query_id or not doc_id:
                 continue

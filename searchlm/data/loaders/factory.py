@@ -12,6 +12,12 @@ from searchlm.data.loaders.base import DatasetLoader
 from searchlm.data.loaders.nfcorpus import NFCorpusLoader
 from searchlm.data.loaders.scifact import SciFactLoader
 
+# Registry of available dataset loaders
+DATASET_LOADERS = {
+    "nfcorpus": NFCorpusLoader,
+    "scifact": SciFactLoader,
+}
+
 
 def create_loader(dataset_name: str, cache_dir: Optional[Path] = None) -> DatasetLoader:
     """
@@ -28,12 +34,10 @@ def create_loader(dataset_name: str, cache_dir: Optional[Path] = None) -> Datase
         ValueError: If dataset_name is not recognized
     """
     dataset_name = dataset_name.lower()
-
-    if dataset_name == "nfcorpus":
-        return NFCorpusLoader(cache_dir=cache_dir)
-    elif dataset_name == "scifact":
-        return SciFactLoader(cache_dir=cache_dir)
-    else:
+    
+    if dataset_name not in DATASET_LOADERS:
         raise ValueError(
-            f"Unknown dataset: {dataset_name}. Supported datasets: nfcorpus, scifact"
+            f"Unknown dataset: {dataset_name}. Available: {list(DATASET_LOADERS.keys())}"
         )
+    
+    return DATASET_LOADERS[dataset_name](cache_dir=cache_dir)

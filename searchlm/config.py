@@ -10,6 +10,12 @@ from omegaconf import DictConfig, OmegaConf
 load_dotenv()
 
 _config: Optional[DictConfig] = None
+_config_path: Optional[Path] = None
+
+
+def _get_default_config_path() -> Path:
+    """Get the default config file path."""
+    return Path(__file__).parent.parent / "config" / "default.yaml"
 
 
 def load_config(config_path: Optional[str] = None) -> DictConfig:
@@ -22,21 +28,21 @@ def load_config(config_path: Optional[str] = None) -> DictConfig:
     Returns:
         OmegaConf DictConfig object
     """
-    global _config
-
-    if _config is not None:
-        return _config
+    global _config, _config_path
 
     if config_path is None:
-        # Default to config/default.yaml relative to project root
-        config_path = Path(__file__).parent.parent / "config" / "default.yaml"
+        config_path = _get_default_config_path()
     else:
         config_path = Path(config_path)
 
-    if not config_path.exists():
-        raise FileNotFoundError(f"Config file not found: {config_path}")
+    # Reload if explicit path provided or config not yet loaded
+    if _config is None or (_config_path != config_path):
+        if not config_path.exists():
+            raise FileNotFoundError(f"Config file not found: {config_path}")
+        
+        _config = OmegaConf.load(config_path)
+        _config_path = config_path
 
-    _config = OmegaConf.load(config_path)
     return _config
 
 

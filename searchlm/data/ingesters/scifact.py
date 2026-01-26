@@ -12,13 +12,6 @@ from tqdm import tqdm
 
 from searchlm.data.ingesters.base import DatasetIngester
 from searchlm.data.loaders import SciFactLoader
-from searchlm.data.schemas import (
-    FIELD_DATASET,
-    FIELD_DOC_ID,
-    FIELD_SOURCE_ID,
-    FIELD_TEXT,
-    FIELD_TITLE,
-)
 
 
 class SciFactIngester(DatasetIngester):
@@ -61,18 +54,7 @@ class SciFactIngester(DatasetIngester):
         corpus_dict = self.loader.load_corpus()
 
         # Convert to indexing format
-        documents = []
-        for doc_id, doc in tqdm(
-            corpus_dict.items(), desc=f"Processing {self.DATASET_NAME} documents"
-        ):
-            index_doc = {
-                FIELD_DOC_ID: doc.doc_id,
-                FIELD_TITLE: doc.title,
-                FIELD_TEXT: doc.text,
-                FIELD_DATASET: self.DATASET_NAME,
-                FIELD_SOURCE_ID: doc.doc_id,
-            }
-            documents.append(index_doc)
+        documents = self.prepare_documents(corpus_dict, self.DATASET_NAME)
 
         print(f"Indexing {len(documents)} {self.DATASET_NAME} documents...")
         for doc in tqdm(documents, desc="Indexing documents"):

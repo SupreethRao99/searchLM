@@ -9,7 +9,7 @@ reward computation.
 from pathlib import Path
 
 from searchlm.config import get_config
-from searchlm.prompts import SYSTEM_PROMPT
+from searchlm.prompts import create_chat_prompt
 
 config = get_config()
 
@@ -44,19 +44,7 @@ def prep_dataset():
 
             for query_id, query in dataset_split.queries.items():
                 # Format prompt with chat template
-                messages = [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {
-                        "role": "user",
-                        "content": (
-                            f"Translate the following question into a "
-                            f"boolean search query:\n{query.text}"
-                        ),
-                    },
-                ]
-                prompt = tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True
-                )
+                prompt = create_chat_prompt(query.text, tokenizer)
 
                 all_data.append(
                     {

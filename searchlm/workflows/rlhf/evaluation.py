@@ -5,11 +5,10 @@ This module evaluates trained checkpoints on test splits using vLLM for fast inf
 and SearchEvaluator for computing IR metrics.
 """
 
-import re
 from pathlib import Path
 
 from searchlm.config import get_config
-from searchlm.prompts import SYSTEM_PROMPT
+from searchlm.prompts import create_chat_prompt, extract_query_from_output
 
 config = get_config()
 
@@ -33,10 +32,6 @@ def get_latest_checkpoint():
     return str(latest)
 
 
-def extract_query(text: str) -> str:
-    """Extract query from model output."""
-    match = re.search(r"<query>\s*(.*?)\s*</query>", text, re.DOTALL)
-    return match.group(1).strip() if match else text.strip()
 
 
 def evaluate(checkpoint_path: str = None):
@@ -86,19 +81,7 @@ def evaluate(checkpoint_path: str = None):
         prompts = []
         query_ids = []
         for qid, query in test_split.queries.items():
-            messages = [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": (
-                        f"Translate the following question into a "
-                        f"boolean search query:\n{query.text}"
-                    ),
-                },
-            ]
-            prompt = tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
+            prompt = create_chat_prompt(query.text, tokenizer)
             prompts.append(prompt)
             query_ids.append(qid)
 
@@ -109,7 +92,7 @@ def evaluate(checkpoint_path: str = None):
         # Extract queries
         generated_queries = []
         for output, qid in zip(outputs, query_ids):
-            query_text = extract_query(output.outputs[0].text)
+            query_text = extract_query_from_output(output.outputs[0].text)
             generated_queries.append((query_text, qid))
 
         # Batch evaluation
