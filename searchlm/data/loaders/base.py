@@ -8,7 +8,7 @@ the interface for loading queries, documents, and relevance judgments.
 from pathlib import Path
 from typing import Dict, Optional
 
-from searchlm.models import DatasetSplit, Document, Query
+from searchlm.models.domain import DatasetSplit, Document, Query
 
 
 class DatasetLoader:

@@ -1,26 +1,54 @@
 """
-Data loading module for IR datasets.
+Data module for SearchLM.
 
-Provides loaders for different datasets, data models, and utilities
-for working with queries, documents, and relevance judgments.
+This module provides data loading, ingestion, and schema management
+for IR datasets.
 """
 
-from searchlm.data.base_loader import DatasetLoader
-from searchlm.data.factory import create_loader
-from searchlm.data.models import DatasetSplit, Document, Query
-from searchlm.data.nfcorpus_loader import NFCorpusLoader
-from searchlm.data.scifact_loader import SciFactLoader
+# Ingesters
+from searchlm.data.ingesters import (
+    DatasetIngester,
+    NFCorpusIngester,
+    SciFactIngester,
+    ingest_all_datasets,
+)
+
+# Loaders
+from searchlm.data.loaders import (
+    DatasetLoader,
+    NFCorpusLoader,
+    SciFactLoader,
+    create_loader,
+)
+
+# Schemas
+from searchlm.data.schemas import (
+    FIELD_DATASET,
+    FIELD_DOC_ID,
+    FIELD_SOURCE_ID,
+    FIELD_TEXT,
+    FIELD_TITLE,
+    SEARCHABLE_FIELDS,
+    IndexSchema,
+)
 
 __all__ = [
-    # Base classes
-    "DatasetLoader",
     # Loaders
+    "DatasetLoader",
     "NFCorpusLoader",
     "SciFactLoader",
-    # Factory
     "create_loader",
-    # Models
-    "Document",
-    "Query",
-    "DatasetSplit",
+    # Ingesters
+    "DatasetIngester",
+    "NFCorpusIngester",
+    "SciFactIngester",
+    "ingest_all_datasets",
+    # Schemas
+    "IndexSchema",
+    "FIELD_DOC_ID",
+    "FIELD_TITLE",
+    "FIELD_TEXT",
+    "FIELD_DATASET",
+    "FIELD_SOURCE_ID",
+    "SEARCHABLE_FIELDS",
 ]

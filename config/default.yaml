@@ -1,0 +1,71 @@
+# SearchLM Configuration
+# Default configuration for all workflows
+
+# Model configuration
+model:
+  name: "Qwen/Qwen2.5-3B-Instruct"
+  max_tokens: 1024
+  temperature: 0.7
+  max_model_len: 16384
+
+# Training hyperparameters
+training:
+  learning_rate: 1e-6
+  num_epochs: 10
+  batch_size:
+    colocate: 4
+    server: 8
+  gradient_accumulation_steps:
+    colocate: 8
+    server: 4
+  max_new_tokens: 1024
+  num_generations: 5
+  gradient_checkpointing: true
+  precision: "bf16"
+  logging_steps: 10
+  save_steps: 50
+  save_total_limit: 3
+  vllm_gpu_memory_utilization: 0.4
+  wandb_run_name:
+    colocate: "searchlm-grpo-qwen2.5-3b"
+    server: "searchlm-grpo-qwen2.5-3b-server"
+  
+# Reward function
+reward:
+  ndcg_weight: 0.6
+  mrr_weight: 0.4
+  split: "train"
+  eval_k: 100
+
+# Evaluation
+evaluation:
+  temperature: 0.7
+  max_tokens: 1024
+  default_k: 100
+  datasets: ["scifact", "nfcorpus"]
+
+# Baseline sampling
+baseline:
+  batch_size: 4096
+  transform_batch_size: 100
+  max_tokens: 1000
+
+# Infrastructure
+infrastructure:
+  python_version: "3.12"
+  # GPU requirements (for documentation)
+  # Training: H100 or A100 (1-2 GPUs)
+  # Evaluation: H100 or A100 (1 GPU)
+  # Baseline inference: L4, T4, or similar (1 GPU)
+
+# Paths (local filesystem or cluster storage)
+paths:
+  models_dir: "./models"  # Model checkpoints and final models
+  data_dir: "./data"  # Training and evaluation datasets
+  index_dir: "./search_index"  # Tantivy search indices
+  output_dir: "./output"  # Generated queries and evaluation results
+
+# Datasets
+datasets:
+  names: ["scifact", "nfcorpus"]
+  splits: ["train", "dev", "test"]

@@ -1,22 +1,35 @@
 # SearchLM
 
-**SearchLM** - A search system for post-training LLMs with Reinforcement Learning with Verifiable Rewards (RLVR) to generate better boolean search queries.
+SearchLM is a search system for post-training LLMs with Reinforcement Learning with Verifiable Rewards (RLVR) to generate better boolean search queries. It provides a complete toolkit for information retrieval research, featuring dataset loading, search index management, and comprehensive evaluation metrics.
 
-SearchLM provides a complete toolkit for information retrieval research, featuring dataset loading, search index management, and comprehensive evaluation metrics for PubMed NFCorpus and SciFact datasets.
+## Overview
+
+SearchLM enables research and development of search query generation systems through:
+
+- **Dataset Management**: Load and ingest NFCorpus and SciFact datasets from HuggingFace MTEB
+- **Full-Text Search**: Tantivy-based search engine for indexing and querying documents
+- **Evaluation Framework**: Comprehensive IR metrics (NDCG, MRR, Precision@K, Recall@K, MAP)
+- **Baseline Generation**: Generate search queries using instruction-tuned LLMs
+- **RLHF Training**: Train models using Group Relative Policy Optimization (GRPO) with verifiable rewards
 
 ## Features
 
-- 📚 **Dataset Loading**: Load NFCorpus and SciFact datasets with train/dev/test splits and relevance judgments (qrels)
-- 🔍 **Full-Text Search**: Powered by Tantivy, a fast full-text search engine written in Rust
-- 📊 **Comprehensive Evaluation**: Built-in IR metrics including NDCG, MRR, Precision@K, Recall@K, and MAP
-- 🏗️ **Unified Index**: Single search index supporting multiple datasets
-- 🎯 **Easy-to-Use API**: Simple, intuitive interface for search and evaluation workflows
+- Dataset loading with train/dev/test splits and relevance judgments (qrels)
+- Unified search index supporting multiple datasets
+- Full-text search powered by Tantivy
+- Comprehensive evaluation with standard IR metrics
+- Baseline query generation workflow
+- RLHF training workflow with GRPO
+- Configuration management via YAML
+- vLLM integration for efficient inference
 
 ## Installation
 
 ### Requirements
 
 - Python >= 3.12
+- CUDA 12.1+ (for GPU acceleration)
+- Linux recommended (Ubuntu 22.04+)
 
 ### Install from Source
 
@@ -25,11 +38,37 @@ SearchLM provides a complete toolkit for information retrieval research, featuri
 git clone <repository-url>
 cd searchLM
 
-# Install using uv
+# Install using uv (recommended)
+# Install core package only (data processing, no GPU dependencies)
 uv sync
 
-# Installing the dev dependencies
+# Install with vLLM for inference
+uv sync --group vllm
+
+# Install with training dependencies
+uv sync --group training
+
+# Install everything including dev tools
 uv sync --all-groups
+
+# Alternative: Using pip
+python3 -m venv venv
+source venv/bin/activate
+pip install -e .
+```
+
+### Environment Setup
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env and add your tokens
+# - HF_TOKEN: HuggingFace token (required)
+# - WANDB_API_KEY: Weights & Biases key (optional, for training)
+
+# Create data directories
+mkdir -p models data search_index output
 ```
 
 ## Quick Start
@@ -43,20 +82,6 @@ from searchlm import ingest_all_datasets
 
 # Ingest both NFCorpus and SciFact datasets
 ingest_all_datasets(index_path="./search_index")
-```
-
-Or ingest datasets individually:
-
-```python
-from searchlm import NFCorpusIngester, SciFactIngester
-
-# Ingest NFCorpus
-nfcorpus_ingester = NFCorpusIngester(index_path="./search_index")
-nfcorpus_ingester.ingest()
-
-# Ingest SciFact
-scifact_ingester = SciFactIngester(index_path="./search_index")
-scifact_ingester.ingest()
 ```
 
 ### 2. Load Datasets
@@ -85,14 +110,6 @@ results = engine.search("cancer treatment", limit=10)
 
 # Search within a specific dataset
 nfcorpus_results = engine.search_by_dataset("cancer treatment", dataset="nfcorpus", limit=10)
-
-# Search with custom fields
-results = engine.search(
-    "cancer treatment",
-    limit=10,
-    fields=["title", "text"],
-    dataset_filter="scifact"
-)
 ```
 
 ### 4. Evaluate Search Quality
@@ -104,24 +121,75 @@ from searchlm import SearchEvaluator
 evaluator = SearchEvaluator(index_path="./search_index")
 
 # Evaluate a single query
-metrics = evaluator.evaluate_single_query(
-    query_id="nfcorpus_1",
+metrics, error = evaluator.evaluate_single_query(
     query_text="cancer treatment",
+    query_id="nfcorpus_1",
     dataset_name="nfcorpus",
     split="test",
-    limit=10
+    k=100
 )
-print(f"NDCG@10: {metrics['ndcg@10']:.4f}")
-print(f"MRR: {metrics['mrr']:.4f}")
+
+if not error:
+    print(f"NDCG@10: {metrics['ndcg@10']:.4f}")
+    print(f"MRR: {metrics['mrr']:.4f}")
 
 # Evaluate entire dataset
-batch_metrics = evaluator.evaluate_batch(
+results = evaluator.evaluate(
     dataset_name="nfcorpus",
     split="test",
-    limit=10
+    k=100
 )
-print(f"Average NDCG@10: {batch_metrics['ndcg@10']:.4f}")
+evaluator.print_metrics(results)
 ```
+
+## Workflows
+
+### Baseline Query Generation
+
+Generate baseline queries using instruction-tuned LLMs:
+
+```bash
+# Generate queries for SciFact
+uv run python -m searchlm.workflows.baseline.cli
+
+# Generate queries for NFCorpus
+uv run python -m searchlm.workflows.baseline.cli \
+  --dataset-name mteb/nfcorpus \
+  --output-filename nfcorpus_queries.tsv
+```
+
+### RLHF Training
+
+Train models using Group Relative Policy Optimization (GRPO):
+
+```bash
+# 1. Prepare training data
+uv run python -m searchlm.workflows.rlhf.cli prep
+
+# 2. Train the model (1 GPU)
+uv run python -m searchlm.workflows.rlhf.cli train
+
+# 3. Train with vLLM server mode (2 GPUs)
+uv run python -m searchlm.workflows.rlhf.cli train --use-vllm-server
+
+# 4. Evaluate trained model
+uv run python -m searchlm.workflows.rlhf.cli eval
+
+# 5. Compare with baseline
+uv run python -m searchlm.workflows.rlhf.cli eval --compare-baseline
+```
+
+## Documentation
+
+For detailed usage instructions, see the [Usage Guide](docs/USAGE.md). The usage guide covers:
+
+- Configuration management
+- Dataset loading and ingestion
+- Search operations
+- Evaluation methods and metrics
+- Baseline query generation
+- RLHF training workflow
+- Advanced usage patterns
 
 ## Project Structure
 
@@ -129,71 +197,26 @@ print(f"Average NDCG@10: {batch_metrics['ndcg@10']:.4f}")
 searchlm/
 ├── searchlm/
 │   ├── __init__.py          # Main package exports
-│   ├── data/                # Dataset loading
-│   │   ├── base_loader.py   # Base loader interface
-│   │   ├── nfcorpus_loader.py
-│   │   ├── scifact_loader.py
-│   │   ├── factory.py       # Loader factory
-│   │   └── models.py        # Data models (Document, Query, DatasetSplit)
-│   ├── ingestion/           # Index ingestion
-│   │   ├── base_ingester.py
-│   │   ├── nfcorpus_ingester.py
-│   │   ├── scifact_ingester.py
-│   │   └── pipeline.py      # Batch ingestion utilities
-│   ├── search_engine/       # Search functionality
-│   │   ├── engine.py        # SearchEngine class
-│   │   └── utils.py
-│   ├── evaluation/          # Evaluation metrics
-│   │   ├── evaluator.py     # SearchEvaluator class
-│   │   ├── metrics.py       # Metric calculations
-│   │   └── models.py        # Evaluation result models
-│   ├── schema/              # Index schema
-│   │   ├── index_schema.py
-│   │   └── constants.py
-│   └── utils/               # Utility functions
-│       ├── logging_utils.py
-│       └── validation.py
+│   ├── config.py            # Configuration management
+│   ├── prompts.py           # LLM prompts
+│   ├── inference.py         # vLLM inference utilities
+│   ├── data/                # Dataset loading and ingestion
+│   │   ├── loaders/         # Dataset loaders
+│   │   ├── ingesters/       # Dataset ingesters
+│   │   └── schemas/         # Index schemas
+│   ├── services/            # Search & evaluation services
+│   ├── models/              # Data models
+│   └── workflows/           # Training & inference workflows
+│       ├── baseline/        # Baseline query generation
+│       └── rlhf/            # RLHF training
+├── config/
+│   └── default.yaml         # Configuration file
+├── docs/
+│   └── USAGE.md            # Usage guide
+├── .env.example            # Environment template
 ├── pyproject.toml
 └── README.md
 ```
-
-## API Overview
-
-### Data Loading
-
-- `load_dataset_split(dataset_name, split)`: Load a dataset split
-- `create_loader(dataset_name)`: Create a dataset loader
-- `DatasetLoader`: Base class for dataset loaders
-- `NFCorpusLoader`, `SciFactLoader`: Dataset-specific loaders
-
-### Search
-
-- `SearchEngine`: Main search engine class
-  - `search(query, limit, fields, dataset_filter)`: Perform search
-  - `search_by_dataset(query, dataset, limit)`: Search within a dataset
-  - `reload_index()`: Reload the search index
-
-### Evaluation
-
-- `SearchEvaluator`: Unified search evaluator
-  - `evaluate_single_query()`: Evaluate a single query
-  - `evaluate_single_query_with_results()`: Evaluate with search results
-  - `evaluate_batch()`: Batch evaluation
-  - `load_qrels()`: Load relevance judgments
-  - `load_queries()`: Load queries
-
-### Metrics
-
-- `calculate_ndcg()`: Normalized Discounted Cumulative Gain
-- `calculate_mrr()`: Mean Reciprocal Rank
-- `calculate_precision_at_k()`: Precision at K
-- `calculate_recall_at_k()`: Recall at K
-- `calculate_map()`: Mean Average Precision
-
-### Ingestion
-
-- `ingest_all_datasets()`: Ingest all datasets
-- `NFCorpusIngester`, `SciFactIngester`: Dataset-specific ingesters
 
 ## Supported Datasets
 
@@ -211,6 +234,17 @@ SearchLM supports standard information retrieval metrics:
 - **Precision@K**: Precision at K
 - **Recall@K**: Recall at K
 - **MAP**: Mean Average Precision
+
+## Configuration
+
+Configuration is managed through `config/default.yaml`. Key settings include:
+
+- Model configuration (name, max tokens, temperature)
+- Training hyperparameters (learning rate, batch sizes, epochs)
+- Reward function weights (NDCG, MRR)
+- Paths for models, data, indices, and output
+
+See the [Usage Guide](docs/USAGE.md) for detailed configuration documentation.
 
 ## License
 

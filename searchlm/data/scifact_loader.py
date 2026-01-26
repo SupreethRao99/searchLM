@@ -4,7 +4,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 from searchlm.data.base_loader import DatasetLoader
-from searchlm.data.models import Document, Query
+from searchlm.models import Document, Query
 
 
 class SciFactLoader(DatasetLoader):
@@ -69,7 +69,8 @@ class SciFactLoader(DatasetLoader):
 
         Args:
             split: Dataset split name (used for filtering and metadata)
-            qrels: Optional pre-loaded qrels to filter queries. If None, will load qrels.
+            qrels: Optional pre-loaded qrels to filter queries.
+                If None, will load qrels.
 
         Returns:
             Dictionary of Query objects for this split

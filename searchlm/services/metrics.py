@@ -23,8 +23,8 @@ def calculate_ndcg(relevance_scores: List[float], k: Optional[int] = None) -> fl
     relevant items appearing lower in the ranking.
 
     Args:
-        relevance_scores: List of relevance scores for ranked documents (ordered by rank)
-                         Higher scores indicate more relevant documents.
+        relevance_scores: List of relevance scores for ranked documents
+            (ordered by rank). Higher scores indicate more relevant documents.
         k: Cutoff rank (if None, uses all scores)
 
     Returns:

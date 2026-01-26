@@ -8,9 +8,9 @@ dataset loader based on the dataset name.
 from pathlib import Path
 from typing import Optional
 
-from searchlm.data.base_loader import DatasetLoader
-from searchlm.data.nfcorpus_loader import NFCorpusLoader
-from searchlm.data.scifact_loader import SciFactLoader
+from searchlm.data.loaders.base import DatasetLoader
+from searchlm.data.loaders.nfcorpus import NFCorpusLoader
+from searchlm.data.loaders.scifact import SciFactLoader
 
 
 def create_loader(dataset_name: str, cache_dir: Optional[Path] = None) -> DatasetLoader:

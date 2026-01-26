@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from datasets import load_dataset
 from tqdm import tqdm
 
-from searchlm.data.base_loader import DatasetLoader
+from searchlm.data.loaders.base import DatasetLoader
 from searchlm.models import Document, Query
 
 

@@ -5,7 +5,7 @@ Provides constants, schema builders, and utilities for managing
 the search index schema.
 """
 
-from searchlm.schema.constants import (
+from searchlm.data.schemas.constants import (
     FIELD_DATASET,
     FIELD_DOC_ID,
     FIELD_SOURCE_ID,
@@ -13,7 +13,7 @@ from searchlm.schema.constants import (
     FIELD_TITLE,
     SEARCHABLE_FIELDS,
 )
-from searchlm.schema.index_schema import IndexSchema
+from searchlm.data.schemas.index import IndexSchema
 
 __all__ = [
     # Constants

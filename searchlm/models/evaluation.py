@@ -13,10 +13,10 @@ from typing import Any, Dict, List
 class SearchResult:
     """
     A single search result document.
-    
+
     Represents a document returned from a search query with its
     relevance score and optional ground truth relevance.
-    
+
     Attributes:
         doc_id: Document identifier
         title: Document title
@@ -26,7 +26,7 @@ class SearchResult:
         relevance: Ground truth relevance (if available)
         rank: Position in ranking (1-based)
     """
-    
+
     doc_id: str
     title: str
     text: str
@@ -40,10 +40,10 @@ class SearchResult:
 class QuerySearchResult:
     """
     Search results for a single query with evaluation metrics.
-    
+
     Encapsulates all information about a query's search results,
     including retrieved documents and calculated evaluation metrics.
-    
+
     Attributes:
         query_id: Query identifier
         query_text: Query text
@@ -53,7 +53,7 @@ class QuerySearchResult:
         num_retrieved: Number of documents retrieved
         num_relevant_total: Total number of relevant documents
     """
-    
+
     query_id: str
     query_text: str
     dataset_name: str
@@ -61,31 +61,31 @@ class QuerySearchResult:
     metrics: Dict[str, float] = field(default_factory=dict)
     num_retrieved: int = 0
     num_relevant_total: int = 0
-    
+
     @property
     def has_metrics(self) -> bool:
         """Check if metrics have been calculated."""
         return len(self.metrics) > 0
-    
+
     @property
     def ndcg_at_10(self) -> float:
         """Get NDCG@10 metric."""
         return self.metrics.get("ndcg@10", 0.0)
-    
+
     @property
     def recall_at_10(self) -> float:
         """Get Recall@10 metric."""
         return self.metrics.get("recall@10", 0.0)
-    
+
     @property
     def mrr(self) -> float:
         """Get MRR metric."""
         return self.metrics.get("mrr", 0.0)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert to dictionary for serialization.
-        
+
         Returns:
             Dictionary representation of the query search result
         """
@@ -100,7 +100,7 @@ class QuerySearchResult:
                 {
                     "doc_id": r.doc_id,
                     "title": r.title,
-                    "text": r.text[:500] + "..." if len(r.text) > 500 else r.text,
+                    "text": r.text,
                     "score": r.score,
                     "relevance": r.relevance,
                     "rank": r.rank,

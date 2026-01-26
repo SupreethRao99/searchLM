@@ -1,5 +1,5 @@
 """
-searchLM - A search system for PubMed NFCorpus and SciFact datasets.
+searchLM - Search system with RLHF training capabilities.
 
 This package provides:
 - Dataset loading with train/test splits and qrels
@@ -7,24 +7,40 @@ This package provides:
 - Full-text search capabilities
 - Unified search evaluator with automatic metrics calculation
 - Evaluation metrics (NDCG, MRR, Precision, Recall, MAP)
+- RLHF training workflows for query generation
 """
 
-# Data loading
-from searchlm.data import (
+# Configuration
+from searchlm.config import get_config, load_config, merge_config
+from searchlm.data.ingesters import (
+    DatasetIngester,
+    NFCorpusIngester,
+    SciFactIngester,
+    ingest_all_datasets,
+)
+
+# Data layer
+from searchlm.data.loaders import (
     DatasetLoader,
-    DatasetSplit,
-    Document,
     NFCorpusLoader,
-    Query,
     SciFactLoader,
     create_loader,
 )
+from searchlm.data.schemas import (
+    FIELD_DATASET,
+    FIELD_DOC_ID,
+    FIELD_SOURCE_ID,
+    FIELD_TEXT,
+    FIELD_TITLE,
+    SEARCHABLE_FIELDS,
+    IndexSchema,
+)
 
-# Evaluation
-from searchlm.evaluation import (
-    QuerySearchResult,
-    SearchEvaluator,
-    SearchResult,
+# Models
+from searchlm.models.domain import DatasetSplit, Document, Query
+from searchlm.models.evaluation import QuerySearchResult, SearchResult
+from searchlm.services.evaluator import SearchEvaluator
+from searchlm.services.metrics import (
     calculate_map,
     calculate_mrr,
     calculate_ndcg,
@@ -32,29 +48,10 @@ from searchlm.evaluation import (
     calculate_recall_at_k,
 )
 
-# Ingestion
-from searchlm.ingestion import (
-    DatasetIngester,
-    NFCorpusIngester,
-    SciFactIngester,
-    ingest_all_datasets,
-)
+# Services
+from searchlm.services.search import SearchEngine
 
-# Schema
-from searchlm.schema import (
-    FIELD_DATASET,
-    FIELD_DOC_ID,
-    FIELD_SOURCE_ID,
-    FIELD_TEXT,
-    FIELD_TITLE,
-    IndexSchema,
-    SEARCHABLE_FIELDS,
-)
-
-# Search
-from searchlm.search_engine import SearchEngine
-
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 
 def load_dataset_split(dataset_name: str, split: str = "test") -> DatasetSplit:
@@ -73,32 +70,28 @@ def load_dataset_split(dataset_name: str, split: str = "test") -> DatasetSplit:
 
 
 __all__ = [
-    # Data loading
+    # Config
+    "load_config",
+    "get_config",
+    "merge_config",
+    # Models
+    "Document",
+    "Query",
+    "DatasetSplit",
+    "SearchResult",
+    "QuerySearchResult",
+    # Data loaders
     "DatasetLoader",
     "NFCorpusLoader",
     "SciFactLoader",
     "create_loader",
     "load_dataset_split",
-    "Document",
-    "Query",
-    "DatasetSplit",
-    # Search
-    "SearchEngine",
-    # Ingestion
+    # Data ingesters
     "DatasetIngester",
     "NFCorpusIngester",
     "SciFactIngester",
     "ingest_all_datasets",
-    # Evaluation
-    "SearchEvaluator",
-    "SearchResult",
-    "QuerySearchResult",
-    "calculate_ndcg",
-    "calculate_mrr",
-    "calculate_precision_at_k",
-    "calculate_recall_at_k",
-    "calculate_map",
-    # Schema
+    # Schemas
     "IndexSchema",
     "FIELD_DOC_ID",
     "FIELD_TITLE",
@@ -106,4 +99,13 @@ __all__ = [
     "FIELD_DATASET",
     "FIELD_SOURCE_ID",
     "SEARCHABLE_FIELDS",
+    # Services
+    "SearchEngine",
+    "SearchEvaluator",
+    # Metrics
+    "calculate_ndcg",
+    "calculate_mrr",
+    "calculate_precision_at_k",
+    "calculate_recall_at_k",
+    "calculate_map",
 ]

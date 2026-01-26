@@ -3,19 +3,19 @@ from typing import Dict, Optional
 from datasets import load_dataset
 from tqdm import tqdm
 
-from searchlm.data.base_loader import DatasetLoader
+from searchlm.data.loaders.base import DatasetLoader
 from searchlm.models import Document, Query
 
 
-class NFCorpusLoader(DatasetLoader):
-    """Loader for NFCorpus dataset from HuggingFace."""
+class SciFactLoader(DatasetLoader):
+    """Loader for SciFact dataset from HuggingFace."""
 
-    DATASET_NAME = "nfcorpus"
-    DATASET_SOURCE = "mteb/nfcorpus"
+    DATASET_NAME = "scifact"
+    DATASET_SOURCE = "mteb/scifact"
 
     def load_corpus(self) -> Dict[str, Document]:
-        """Load NFCorpus documents."""
-        print("Loading NFCorpus corpus...")
+        """Load SciFact documents."""
+        print("Loading SciFact corpus...")
 
         corpus_dataset = load_dataset(
             self.DATASET_SOURCE, "corpus", cache_dir=self.cache_dir
@@ -24,14 +24,33 @@ class NFCorpusLoader(DatasetLoader):
 
         documents = {}
         for item in tqdm(corpus, desc="Processing documents"):
-            doc_id = str(item.get("_id") or item.get("id", ""))
+            # Try multiple possible field name variations
+            doc_id = str(
+                item.get("id")
+                or item.get("_id")
+                or item.get("corpus-id")
+                or item.get("doc_id")
+                or ""
+            )
             if not doc_id:
                 continue
 
+            # Try different field names for title
+            title = item.get("title") or item.get("Title") or ""
+
+            # Try abstract, text, or content fields
+            text = (
+                item.get("abstract")
+                or item.get("text")
+                or item.get("content")
+                or item.get("Abstract")
+                or ""
+            )
+
             doc = Document(
                 doc_id=doc_id,
-                title=item.get("title", ""),
-                text=item.get("text", ""),
+                title=title,
+                text=text,
                 dataset_name=self.DATASET_NAME,
                 metadata={"source_id": doc_id},
             )
@@ -43,7 +62,7 @@ class NFCorpusLoader(DatasetLoader):
         self, split: str = "test", qrels: Optional[Dict[str, Dict[str, float]]] = None
     ) -> Dict[str, Query]:
         """
-        Load NFCorpus queries for a specific split.
+        Load SciFact queries for a specific split.
 
         Note: The 'queries' subset contains ALL queries in a single split.
         We load all queries, then filter by which ones have qrels in the target split.
@@ -56,7 +75,7 @@ class NFCorpusLoader(DatasetLoader):
         Returns:
             Dictionary of Query objects for this split
         """
-        print(f"Loading NFCorpus queries ({split} split)...")
+        print(f"Loading SciFact queries ({split} split)...")
 
         # Load ALL queries from the "queries" split
         queries_dataset = load_dataset(
@@ -96,8 +115,8 @@ class NFCorpusLoader(DatasetLoader):
         return queries
 
     def load_qrels(self, split: str = "test") -> Dict[str, Dict[str, float]]:
-        """Load NFCorpus relevance judgments for a specific split."""
-        print(f"Loading NFCorpus qrels ({split} split)...")
+        """Load SciFact relevance judgments for a specific split."""
+        print(f"Loading SciFact qrels ({split} split)...")
 
         qrels_dataset = load_dataset(
             self.DATASET_SOURCE, "default", split=split, cache_dir=self.cache_dir

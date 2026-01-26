@@ -5,13 +5,11 @@ This module provides helper functions for consistent logging
 and output formatting across the application.
 """
 
-from typing import Optional
-
 
 def print_header(text: str, width: int = 60, char: str = "="):
     """
     Print a formatted header with a border.
-    
+
     Args:
         text: Header text to display
         width: Width of the header in characters
@@ -25,7 +23,7 @@ def print_header(text: str, width: int = 60, char: str = "="):
 def print_section(text: str, width: int = 60, char: str = "-"):
     """
     Print a formatted section divider.
-    
+
     Args:
         text: Section text to display
         width: Width of the divider in characters
@@ -39,12 +37,12 @@ def print_section(text: str, width: int = 60, char: str = "-"):
 def format_metric(name: str, value: float, precision: int = 4) -> str:
     """
     Format a metric name and value for display.
-    
+
     Args:
         name: Metric name
         value: Metric value
         precision: Number of decimal places
-    
+
     Returns:
         Formatted metric string
     """
@@ -54,7 +52,7 @@ def format_metric(name: str, value: float, precision: int = 4) -> str:
 def print_progress(current: int, total: int, prefix: str = "Progress"):
     """
     Print a simple progress indicator.
-    
+
     Args:
         current: Current progress count
         total: Total count
