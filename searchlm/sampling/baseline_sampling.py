@@ -235,12 +235,12 @@ def orchestrate(
 
 @app.local_entrypoint()
 def main(
-    dataset_name: str = "mteb/nfcorpus",
+    dataset_name: str = "mteb/scifact",
     subset: str = "queries",
     split: str = "queries",
     batch_size: int = 4096,
     wait_for_results: bool = True,
-    output_filename: str = "generated_queries.tsv",
+    output_filename: str = "scifact_generated_queries.tsv",
 ):
     """
     Main entrypoint for baseline query generation.
