@@ -1,19 +1,16 @@
 """Evaluation for GRPO-trained models."""
 
-from pathlib import Path
-
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
 from searchlm import SearchEvaluator, create_loader
-from searchlm.config import get_config
+from searchlm.config import get_config, get_data_path
 from searchlm.prompts import create_chat_prompt, extract_query_from_output
 
 
 def get_latest_checkpoint() -> str:
     """Get path to latest checkpoint."""
-    config = get_config()
-    models_dir = Path(config.paths.models_dir)
+    models_dir = get_data_path("models")
 
     checkpoint_dirs = [
         d
@@ -40,7 +37,7 @@ def evaluate(checkpoint_path: str = None, compare_baseline: bool = False):
         Dictionary with evaluation results for both datasets.
     """
     config = get_config()
-    index_dir = Path(config.paths.index_dir)
+    indices_dir = get_data_path("indices")
 
     print("\n" + "=" * 60)
     print("SearchLM GRPO Model Evaluation")
@@ -60,7 +57,7 @@ def evaluate(checkpoint_path: str = None, compare_baseline: bool = False):
     )
 
     # Initialize evaluator
-    evaluator = SearchEvaluator(index_path=str(index_dir))
+    evaluator = SearchEvaluator(index_path=str(indices_dir))
     tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
 
     results = {}

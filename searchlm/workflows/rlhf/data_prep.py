@@ -1,26 +1,24 @@
 """Data preparation for GRPO training."""
 
-from pathlib import Path
-
 from datasets import Dataset
 from transformers import AutoTokenizer
 
 from searchlm import create_loader
-from searchlm.config import get_config
+from searchlm.config import get_config, get_data_path
 from searchlm.prompts import create_chat_prompt
 
 
 def prepare_training_data():
     """Prepare training data from SciFact and NFCorpus datasets."""
     config = get_config()
-    data_dir = Path(config.paths.data_dir)
+    datasets_dir = get_data_path("datasets")
 
     print("=" * 60)
     print("Preparing training data")
     print("=" * 60)
 
     # Ensure data directory exists
-    data_dir.mkdir(parents=True, exist_ok=True)
+    datasets_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize tokenizer
     print(f"Loading tokenizer for {config.model.name}...")
@@ -59,9 +57,9 @@ def prepare_training_data():
     test_dataset = dataset.select(range(split_idx, len(dataset)))
 
     # Save to disk
-    print(f"\nSaving to {data_dir}...")
-    train_dataset.save_to_disk(str(data_dir / "train"))
-    test_dataset.save_to_disk(str(data_dir / "test"))
+    print(f"\nSaving to {datasets_dir}...")
+    train_dataset.save_to_disk(str(datasets_dir / "train"))
+    test_dataset.save_to_disk(str(datasets_dir / "test"))
 
     print(f"✓ Saved {len(train_dataset)} training examples")
     print(f"✓ Saved {len(test_dataset)} validation examples")

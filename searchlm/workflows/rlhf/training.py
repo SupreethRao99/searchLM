@@ -2,12 +2,11 @@
 
 import os
 import subprocess
-from pathlib import Path
 
 from datasets import load_from_disk
 from trl import GRPOConfig, GRPOTrainer
 
-from searchlm.config import get_config
+from searchlm.config import get_config, get_data_path
 from searchlm.workflows.rlhf.reward import reward_function
 
 
@@ -20,8 +19,8 @@ def train(use_vllm_server: bool = False):
                         If False, use colocate mode (1 GPU).
     """
     config = get_config()
-    data_dir = Path(config.paths.data_dir)
-    models_dir = Path(config.paths.models_dir)
+    datasets_dir = get_data_path("datasets")
+    models_dir = get_data_path("models")
 
     print("=" * 60)
     mode = "server" if use_vllm_server else "colocate"
@@ -55,7 +54,7 @@ def train(use_vllm_server: bool = False):
         )
 
     print("Loading dataset...")
-    train_dataset = load_from_disk(str(data_dir / "train"))
+    train_dataset = load_from_disk(str(datasets_dir / "train"))
     print(f"Loaded {len(train_dataset)} training examples")
 
     # Configure training

@@ -67,3 +67,36 @@ def merge_config(overrides: dict) -> DictConfig:
     config = get_config()
     override_conf = OmegaConf.create(overrides)
     return OmegaConf.merge(config, override_conf)
+
+
+def get_data_path(subdir: str) -> Path:
+    """
+    Get full path for a data subdirectory.
+
+    Args:
+        subdir: One of 'datasets', 'outputs', 'models', 'indices'
+
+    Returns:
+        Full path to the subdirectory
+    """
+    import os
+
+    config = get_config()
+    data_dir = Path(config.paths.data_dir)
+
+    # If path is already absolute, use it as-is
+    if data_dir.is_absolute():
+        return data_dir / config.paths.subdirs[subdir]
+
+    # Resolve relative paths based on environment
+    # Modal sets MODAL_IMAGE_ID when running in container
+    is_modal = os.getenv("MODAL_IMAGE_ID") is not None
+
+    if is_modal:
+        # Running on Modal - resolve relative to /root/searchlm
+        project_root = Path("/root/searchlm")
+    else:
+        # Running locally - resolve relative to project root
+        project_root = Path(__file__).parent.parent
+
+    return project_root / data_dir / config.paths.subdirs[subdir]

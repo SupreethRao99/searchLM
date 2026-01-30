@@ -6,7 +6,7 @@ from pathlib import Path
 
 from datasets import load_dataset
 
-from searchlm.config import get_config
+from searchlm.config import get_config, get_data_path
 from searchlm.inference import VllmEngine
 from searchlm.prompts import create_chat_prompt
 
@@ -29,7 +29,7 @@ class BaselineGenerator:
         dataset_name: str = "mteb/scifact",
         subset: str = "queries",
         split: str = "queries",
-        output_filepath: str = "./data/scifact_generated_queries.tsv",
+        output_filepath: str | None = None,
     ):
         """
         Initialize the baseline generator.
@@ -38,7 +38,7 @@ class BaselineGenerator:
             dataset_name: HuggingFace dataset name
             subset: Dataset subset
             split: Dataset split
-            output_filepath: Output TSV filepath
+            output_filepath: Output TSV filepath (defaults to outputs/ directory)
         """
         self.config = get_config()
         self.dataset_name = dataset_name
@@ -115,8 +115,7 @@ def main():
 
         # For NFCorpus, modify the class instantiation in this function
     """
-    config = get_config()
-    output_dir = Path(config.paths.output_dir)
+    output_dir = get_data_path("outputs")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     generator = BaselineGenerator(

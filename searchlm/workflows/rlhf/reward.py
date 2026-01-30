@@ -1,11 +1,10 @@
 """Reward function for GRPO training."""
 
 import re
-from pathlib import Path
 from typing import Iterable, Sequence
 
 from searchlm import SearchEvaluator
-from searchlm.config import get_config
+from searchlm.config import get_config, get_data_path
 
 
 def reward_function(
@@ -30,8 +29,8 @@ def reward_function(
         List of float rewards in [0, 1] range
     """
     config = get_config()
-    index_dir = Path(config.paths.index_dir)
-    evaluator = SearchEvaluator(index_path=str(index_dir))
+    indices_dir = get_data_path("indices")
+    evaluator = SearchEvaluator(index_path=str(indices_dir))
 
     rewards = []
     for completion, query_id, dataset_name in zip(

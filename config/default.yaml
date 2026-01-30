@@ -58,12 +58,16 @@ infrastructure:
   # Evaluation: H100 or A100 (1 GPU)
   # Baseline inference: L4, T4, or similar (1 GPU)
 
-# Paths (local filesystem or cluster storage)
+# Paths - Single source of truth for all data locations
 paths:
-  models_dir: "./models"  # Model checkpoints and final models
-  data_dir: "./data"  # Training and evaluation datasets
-  index_dir: "./search_index"  # Tantivy search indices
-  output_dir: "./searchlm-data"  # Generated queries and evaluation results; Modal volume mount uses this path
+  data_dir: "./modal_data"  # Root directory for all persistent data (Modal volume mount)
+  
+  # Subdirectories (relative to data_dir)
+  subdirs:
+    datasets: "datasets"      # Training and evaluation datasets
+    outputs: "outputs"        # Generated queries and evaluation results
+    models: "models"          # Model checkpoints and final models
+    indices: "indices"        # Tantivy search indices
 
 # Datasets
 datasets:

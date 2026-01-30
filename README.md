@@ -199,6 +199,48 @@ train(use_vllm_server=False)  # 1 GPU mode (colocate)
 evaluate(compare_baseline=True)
 ```
 
+## Cloud Development with Modal
+
+SearchLM provides Modal infrastructure for cloud-based GPU development with two powerful workflows:
+
+### Hot Reload Mode (Recommended)
+
+Rapid iteration with automatic code syncing - edit locally, changes reflect on remote GPU instantly:
+
+```bash
+# Terminal 1: Start serve mode (watches for file changes)
+# Run from the repo root directory
+modal serve modal_dev.py
+
+# Terminal 2: Run workflows (edit code, save, and re-run)
+modal run modal_dev.py::run_baseline
+modal run modal_dev.py::run_training
+modal run modal_dev.py::run_evaluation
+modal run modal_dev.py::run_data_prep
+
+# Run any Python module with hot reload
+modal run modal_dev.py::run_python --module searchlm.workflows.baseline.baseline
+```
+
+**Iteration speed:** Edit → Save → Run (2-3 seconds, no restart needed)
+
+### Interactive Shell Mode
+
+VM-like SSH access for deep debugging and exploration:
+
+```bash
+# Terminal 1: Start container
+modal run modal_infra.py::dev_shell
+
+# Terminal 2: Attach and explore
+modal container list
+modal shell ta-XXXXXXXXXXXXXXXXXXXXX
+cd /root/searchlm
+python -m searchlm.workflows.baseline.baseline
+```
+
+**For complete documentation**, see [docs/MODAL_DEVELOPMENT.md](docs/MODAL_DEVELOPMENT.md).
+
 ## Documentation
 
 For detailed usage instructions, see the [Usage Guide](docs/USAGE.md). The usage guide covers:

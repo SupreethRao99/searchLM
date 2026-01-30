@@ -51,6 +51,11 @@ venv.bak/
 # Search index
 search_index/
 
+# Data directories (Modal volume-mounted)
+modal_data/
+data/
+output/
+
 # Generated query files
 *_queries.json
 *queries*.json
