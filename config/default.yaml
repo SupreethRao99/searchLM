@@ -63,7 +63,7 @@ paths:
   models_dir: "./models"  # Model checkpoints and final models
   data_dir: "./data"  # Training and evaluation datasets
   index_dir: "./search_index"  # Tantivy search indices
-  output_dir: "./output"  # Generated queries and evaluation results
+  output_dir: "./searchlm-data"  # Generated queries and evaluation results; Modal volume mount uses this path
 
 # Datasets
 datasets:

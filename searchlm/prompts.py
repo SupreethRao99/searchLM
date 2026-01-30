@@ -40,37 +40,21 @@ Translate the following question into a boolean search query:
 """
 
 
-def format_user_prompt(question: str) -> str:
-    """
-    Format user prompt with question.
-
-    Args:
-        question: The question to convert into a search query
-
-    Returns:
-        Formatted user prompt
-    """
-    return USER_PROMPT_TEMPLATE.format(question=question)
-
-
-def create_chat_prompt(query_text: str, tokenizer) -> str:
+def create_chat_prompt(query_text: str) -> list[dict]:
     """
     Create formatted chat prompt for query generation.
 
     Args:
         query_text: The query text to format
-        tokenizer: Tokenizer with apply_chat_template method
 
     Returns:
-        Formatted chat prompt string
+        List of chat messages
     """
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": format_user_prompt(query_text)},
+        {"role": "user", "content": USER_PROMPT_TEMPLATE.format(question=query_text)},
     ]
-    return tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
+    return messages
 
 
 def extract_query_from_output(text: str) -> str:

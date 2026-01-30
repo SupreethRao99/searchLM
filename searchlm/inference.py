@@ -20,9 +20,9 @@ class VllmEngine:
             model_name: Model name to load (defaults to config.model.name)
             max_model_len: Maximum model length (defaults to config.model.max_model_len)
         """
-        config = get_config()
-        self.model_name = model_name or config.model.name
-        self.max_model_len = max_model_len or config.model.max_model_len
+        self.config = get_config()
+        self.model_name = model_name or self.config.model.name
+        self.max_model_len = max_model_len or self.config.model.max_model_len
         self.llm = LLM(model=self.model_name, max_model_len=self.max_model_len)
         self.tokenizer = self.llm.get_tokenizer()
 
@@ -51,5 +51,5 @@ class VllmEngine:
             **kwargs,
         )
 
-        outputs = self.llm.generate(prompts, sampling_params)
+        outputs = self.llm.chat(prompts, sampling_params)
         return [output.outputs[0].text for output in outputs]

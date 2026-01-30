@@ -3,7 +3,7 @@ name = "searchlm"
 version = "0.1.0"
 description = "SearchLM - post training a LLM with Reinforcement Learning with Verifiable Rewards (RLVR) to generate better boolean search queries"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 authors = [
     { name = "Supreeth Rao", email = "raosupreeth00@gmail.com" },
 ]
@@ -25,14 +25,14 @@ classifiers = [
 ]
 dependencies = [
     "datasets>=4.5.0",
-    "numpy>=2.4.1",
+    "modal>=1.3.1",
     "omegaconf>=2.3.0",
     "python-dotenv>=1.2.1",
     "tantivy>=0.25.1",
     "tqdm>=4.67.1",
-    "transformers>=5.0.0",
-    "trl>=0.14.0 ; sys_platform == 'darwin'",
-    "trl[vllm]>=0.14.0 ; sys_platform == 'linux'",
+    "transformers>=4.56.0",
+    "vllm==0.12.0; sys_platform == 'linux'",
+    "trl[vllm]; sys_platform == 'linux'",
 ]
 
 [dependency-groups]
