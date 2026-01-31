@@ -7,7 +7,7 @@ from datasets import load_from_disk
 from trl import GRPOConfig, GRPOTrainer
 
 from searchlm.config import get_config, get_data_path
-from searchlm.workflows.rlhf.reward import reward_function
+from searchlm.workflows.rlhf.reward import RewardFunction
 
 
 def train(use_vllm_server: bool = False):
@@ -81,7 +81,6 @@ def train(use_vllm_server: bool = False):
         num_train_epochs=config.training.num_epochs,
         per_device_train_batch_size=batch_config,
         gradient_accumulation_steps=grad_accum,
-        max_new_tokens=config.training.max_new_tokens,
         temperature=config.model.temperature,
         num_generations=config.training.num_generations,
         gradient_checkpointing=config.training.gradient_checkpointing,
@@ -94,25 +93,28 @@ def train(use_vllm_server: bool = False):
         logging_steps=config.training.logging_steps,
         save_steps=config.training.save_steps,
         save_total_limit=config.training.save_total_limit,
-        report_to="wandb",
         run_name=run_name,
     )
 
     # Initialize trainer
     print("Initializing GRPOTrainer...")
+    reward_fn = RewardFunction(train_dataset)
     trainer = GRPOTrainer(
         model=config.model.name,
         args=training_args,
-        reward_funcs=reward_function,
+        reward_funcs=reward_fn,
         train_dataset=train_dataset,
     )
 
     # Train!
     print("Starting training...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
 
     # Save final checkpoint
     print("Saving final model...")
     trainer.save_model(str(models_dir / "final"))
 
     print("Training complete!")
+
+if __name__ == "__main__":
+    train()

@@ -11,7 +11,7 @@ DATA_DIR = "modal_data"
 CONTAINER_DATA_PATH = f"{CONTAINER_PROJECT_ROOT}/{DATA_DIR}"
 
 searchlm_image = (
-    modal.Image.from_registry("nvidia/cuda:12.8.0-devel-ubuntu22.04", add_python="3.12")
+    modal.Image.from_registry("nvidia/cuda:13.1.1-devel-ubuntu24.04", add_python="3.12")
     .entrypoint([])
     .uv_sync()
     .env({"HF_XET_HIGH_PERFORMANCE": "1"})
@@ -41,7 +41,7 @@ app = modal.App(name="searchlm")
 @app.function(
     image=searchlm_image,
     gpu="L4",
-    timeout=3600,
+    timeout=CONTAINER_AUTO_STOP_TIME,
     volumes={
         CONTAINER_DATA_PATH: volume,
         "/root/.cache/huggingface": hf_cache_vol,

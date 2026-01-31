@@ -1,7 +1,6 @@
 """Data preparation for GRPO training."""
 
 from datasets import Dataset
-from transformers import AutoTokenizer
 
 from searchlm import create_loader
 from searchlm.config import get_config, get_data_path
@@ -20,23 +19,19 @@ def prepare_training_data():
     # Ensure data directory exists
     datasets_dir.mkdir(parents=True, exist_ok=True)
 
-    # Initialize tokenizer
-    print(f"Loading tokenizer for {config.model.name}...")
-    tokenizer = AutoTokenizer.from_pretrained(config.model.name)
-
     all_data = []
 
-    # Load train + dev splits from both datasets
+    # Load train split from both datasets
     for dataset_name in config.datasets.names:
         print(f"Loading {dataset_name}...")
         loader = create_loader(dataset_name)
 
-        for split in ["train", "dev"]:
+        for split in ["train"]:
             dataset_split = loader.load_split(split=split)
             print(f"  {split}: {len(dataset_split.queries)} queries")
 
             for query_id, query in dataset_split.queries.items():
-                prompt = create_chat_prompt(query.text, tokenizer)
+                prompt = create_chat_prompt(query.text)
                 all_data.append(
                     {
                         "prompt": prompt,
@@ -68,3 +63,7 @@ def prepare_training_data():
     train_df = train_dataset.to_pandas()
     print("\nDataset breakdown:")
     print(train_df["dataset_name"].value_counts())
+
+
+if __name__ == "__main__":
+    prepare_training_data()

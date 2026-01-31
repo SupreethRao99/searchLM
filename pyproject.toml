@@ -32,7 +32,9 @@ dependencies = [
     "tqdm>=4.67.1",
     "transformers>=4.56.0",
     "vllm==0.12.0; sys_platform == 'linux'",
-    "trl[vllm]; sys_platform == 'linux'",
+    "trl[vllm]==0.27.0; sys_platform == 'linux'",
+    "trl>=0.27.0",
+    "typer>=0.21.1",
 ]
 
 [dependency-groups]

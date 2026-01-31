@@ -6,26 +6,26 @@ model:
   name: "Qwen/Qwen2.5-3B-Instruct"
   max_tokens: 1024
   temperature: 0.7
-  max_model_len: 16384
+  max_model_len: 4096
 
 # Training hyperparameters
 training:
   learning_rate: 1e-6
-  num_epochs: 10
+  num_epochs: 3
   batch_size:
-    colocate: 4
+    colocate: 1  # Reduced from 4 to avoid OOM
     server: 8
   gradient_accumulation_steps:
-    colocate: 8
+    colocate: 16  # Increased from 8 to maintain effective batch size of 16
     server: 4
-  max_new_tokens: 1024
-  num_generations: 5
+  max_new_tokens: 2048
+  num_generations: 2  # Reduced from 4 to save memory
   gradient_checkpointing: true
   precision: "bf16"
   logging_steps: 10
   save_steps: 50
   save_total_limit: 3
-  vllm_gpu_memory_utilization: 0.4
+  vllm_gpu_memory_utilization: 0.35  # Reduced from 0.4 to give training more room
   wandb_run_name:
     colocate: "searchlm-grpo-qwen2.5-3b"
     server: "searchlm-grpo-qwen2.5-3b-server"

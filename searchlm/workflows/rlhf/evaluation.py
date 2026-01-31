@@ -1,12 +1,10 @@
 """Evaluation for GRPO-trained models."""
 
-from transformers import AutoTokenizer
-from vllm import LLM, SamplingParams
 
 from searchlm import SearchEvaluator, create_loader
 from searchlm.config import get_config, get_data_path
 from searchlm.prompts import create_chat_prompt, extract_query_from_output
-
+from searchlm.inference import VllmEngine
 
 def get_latest_checkpoint() -> str:
     """Get path to latest checkpoint."""
@@ -50,16 +48,10 @@ def evaluate(checkpoint_path: str = None, compare_baseline: bool = False):
     print(f"\nLoading checkpoint: {checkpoint_path}")
 
     # Initialize vLLM
-    llm = LLM(model=checkpoint_path)
-    sampling_params = SamplingParams(
-        temperature=config.evaluation.temperature,
-        max_tokens=config.evaluation.max_tokens,
-    )
+    searchlm_engine = VllmEngine(model_name=checkpoint_path)
 
     # Initialize evaluator
     evaluator = SearchEvaluator(index_path=str(indices_dir))
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
-
     results = {}
 
     for dataset_name in config.evaluation.datasets:
@@ -75,16 +67,16 @@ def evaluate(checkpoint_path: str = None, compare_baseline: bool = False):
         prompts = []
         query_ids = []
         for qid, query in test_split.queries.items():
-            prompt = create_chat_prompt(query.text, tokenizer)
+            prompt = create_chat_prompt(query.text)
             prompts.append(prompt)
             query_ids.append(qid)
 
         print(f"Generating {len(prompts)} queries...")
-        outputs = llm.generate(prompts, sampling_params)
+        outputs = searchlm_engine.generate(prompts)
 
         # Extract queries
         generated_queries = [
-            (extract_query_from_output(output.outputs[0].text), qid)
+            (extract_query_from_output(output), qid)
             for output, qid in zip(outputs, query_ids)
         ]
 
@@ -130,3 +122,6 @@ def evaluate(checkpoint_path: str = None, compare_baseline: bool = False):
     print("=" * 60 + "\n")
 
     return results
+
+if __name__ == "__main__":
+    evaluate()
