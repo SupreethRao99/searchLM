@@ -227,6 +227,35 @@ python -m searchlm.workflows.baseline.baseline
 
 **For complete documentation**, see [docs/MODAL_DEVELOPMENT.md](docs/MODAL_DEVELOPMENT.md).
 
+## Model Sharing
+
+### Upload to Hugging Face Hub
+
+After training your model, you can easily upload it to Hugging Face Hub with comprehensive documentation:
+
+```bash
+# Upload latest checkpoint (private by default)
+python scripts/upload_to_hf.py --repo-name searchlm-qwen2.5-3b-rlhf
+
+# Upload specific checkpoint
+python scripts/upload_to_hf.py \
+  --repo-name searchlm-qwen2.5-3b-rlhf \
+  --checkpoint-path ./modal_data/models/checkpoint-500
+
+# Upload as public repository
+python scripts/upload_to_hf.py \
+  --repo-name searchlm-qwen2.5-3b-rlhf \
+  --public
+```
+
+The upload utility automatically:
+- Finds the latest checkpoint
+- Generates a comprehensive model card with training details
+- Uploads all model files and documentation
+- Creates a private repository by default
+
+For complete documentation, see [HuggingFace Upload Guide](docs/HUGGINGFACE_UPLOAD.md).
+
 ## Documentation
 
 For detailed usage instructions, see the [Usage Guide](docs/USAGE.md). The usage guide covers:
@@ -238,6 +267,12 @@ For detailed usage instructions, see the [Usage Guide](docs/USAGE.md). The usage
 - Baseline query generation
 - RLHF training workflow
 - Advanced usage patterns
+
+Additional documentation:
+- [Complete Workflow Guide](docs/COMPLETE_WORKFLOW.md) - End-to-end workflow from training to HuggingFace
+- [HuggingFace Upload Guide](docs/HUGGINGFACE_UPLOAD.md) - Upload models to HuggingFace Hub  
+- [Modal Development Guide](docs/MODAL_DEVELOPMENT.md) - Cloud development with Modal
+- [HuggingFace Quick Start](HUGGINGFACE_UPLOAD_QUICK_START.md) - Quick reference for model upload
 
 ## Project Structure
 

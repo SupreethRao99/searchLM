@@ -12,42 +12,22 @@ This package provides:
 
 # Configuration
 from searchlm.config import get_config, load_config, merge_config
-from searchlm.data.ingesters import (
-    DatasetIngester,
-    NFCorpusIngester,
-    SciFactIngester,
-    ingest_all_datasets,
-)
-
+from searchlm.data.ingesters import (DatasetIngester, NFCorpusIngester,
+                                     SciFactIngester, ingest_all_datasets)
 # Data layer
-from searchlm.data.loaders import (
-    DatasetLoader,
-    NFCorpusLoader,
-    SciFactLoader,
-    create_loader,
-)
-from searchlm.data.schemas import (
-    FIELD_DATASET,
-    FIELD_DOC_ID,
-    FIELD_SOURCE_ID,
-    FIELD_TEXT,
-    FIELD_TITLE,
-    SEARCHABLE_FIELDS,
-    IndexSchema,
-)
-
+from searchlm.data.loaders import (DatasetLoader, NFCorpusLoader,
+                                   SciFactLoader, create_loader)
+from searchlm.data.schemas import (FIELD_DATASET, FIELD_DOC_ID,
+                                   FIELD_SOURCE_ID, FIELD_TEXT, FIELD_TITLE,
+                                   SEARCHABLE_FIELDS, IndexSchema)
 # Models
 from searchlm.models.domain import DatasetSplit, Document, Query
 from searchlm.models.evaluation import QuerySearchResult, SearchResult
 from searchlm.services.evaluator import SearchEvaluator
-from searchlm.services.metrics import (
-    calculate_map,
-    calculate_mrr,
-    calculate_ndcg,
-    calculate_precision_at_k,
-    calculate_recall_at_k,
-)
-
+from searchlm.services.metrics import (calculate_map, calculate_mrr,
+                                       calculate_ndcg,
+                                       calculate_precision_at_k,
+                                       calculate_recall_at_k)
 # Services
 from searchlm.services.search import SearchEngine
 

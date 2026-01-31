@@ -116,5 +116,6 @@ def train(use_vllm_server: bool = False):
 
     print("Training complete!")
 
+
 if __name__ == "__main__":
     train()

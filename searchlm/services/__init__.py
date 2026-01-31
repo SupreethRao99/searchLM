@@ -5,13 +5,10 @@ This module provides high-level services for search and evaluation.
 """
 
 from searchlm.services.evaluator import SearchEvaluator
-from searchlm.services.metrics import (
-    calculate_map,
-    calculate_mrr,
-    calculate_ndcg,
-    calculate_precision_at_k,
-    calculate_recall_at_k,
-)
+from searchlm.services.metrics import (calculate_map, calculate_mrr,
+                                       calculate_ndcg,
+                                       calculate_precision_at_k,
+                                       calculate_recall_at_k)
 from searchlm.services.search import SearchEngine
 
 __all__ = [

@@ -9,14 +9,9 @@ from typing import List
 
 import tantivy
 
-from searchlm.data.schemas.constants import (
-    FIELD_DATASET,
-    FIELD_DOC_ID,
-    FIELD_SOURCE_ID,
-    FIELD_TEXT,
-    FIELD_TITLE,
-    SEARCHABLE_FIELDS,
-)
+from searchlm.data.schemas.constants import (FIELD_DATASET, FIELD_DOC_ID,
+                                             FIELD_SOURCE_ID, FIELD_TEXT,
+                                             FIELD_TITLE, SEARCHABLE_FIELDS)
 
 
 class IndexSchema:

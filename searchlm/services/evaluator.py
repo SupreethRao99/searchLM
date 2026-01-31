@@ -13,13 +13,10 @@ from tqdm import tqdm
 
 from searchlm.data import create_loader
 from searchlm.models.evaluation import QuerySearchResult, SearchResult
-from searchlm.services.metrics import (
-    calculate_map,
-    calculate_mrr,
-    calculate_ndcg,
-    calculate_precision_at_k,
-    calculate_recall_at_k,
-)
+from searchlm.services.metrics import (calculate_map, calculate_mrr,
+                                       calculate_ndcg,
+                                       calculate_precision_at_k,
+                                       calculate_recall_at_k)
 from searchlm.services.search import SearchEngine
 
 

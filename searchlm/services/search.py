@@ -10,14 +10,9 @@ from typing import Any, Dict, List, Optional
 
 import tantivy
 
-from searchlm.data.schemas import (
-    FIELD_DATASET,
-    FIELD_DOC_ID,
-    FIELD_SOURCE_ID,
-    FIELD_TEXT,
-    FIELD_TITLE,
-    IndexSchema,
-)
+from searchlm.data.schemas import (FIELD_DATASET, FIELD_DOC_ID,
+                                   FIELD_SOURCE_ID, FIELD_TEXT, FIELD_TITLE,
+                                   IndexSchema)
 
 
 def get_field_from_doc(

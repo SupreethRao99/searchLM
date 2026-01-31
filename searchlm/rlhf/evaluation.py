@@ -4,12 +4,13 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
 import numpy as np
 
 from searchlm import SearchEvaluator, create_loader
 from searchlm.config import get_config, get_data_path
-from searchlm.prompts import create_chat_prompt, extract_query_from_output
 from searchlm.inference import VllmEngine
+from searchlm.prompts import create_chat_prompt, extract_query_from_output
 
 
 def get_latest_checkpoint() -> str:
@@ -87,7 +88,11 @@ def compute_aggregate_metrics(all_runs: list[dict]) -> dict:
     aggregate = {}
 
     for dataset in datasets:
-        metrics_names = [k for k in all_runs[0][dataset].keys() if isinstance(all_runs[0][dataset][k], (int, float))]
+        metrics_names = [
+            k
+            for k in all_runs[0][dataset].keys()
+            if isinstance(all_runs[0][dataset][k], (int, float))
+        ]
         aggregate[dataset] = {}
 
         for metric in metrics_names:
@@ -114,7 +119,7 @@ def print_aggregate_results(aggregate: dict, model_name: str):
         print(f"{'Metric':<20} {'Mean':<12} {'Std':<12} {'Min':<12} {'Max':<12}")
         print("-" * 70)
 
-        key_metrics = ['ndcg@10', 'ndcg@100', 'mrr', 'map', 'precision@10', 'recall@10']
+        key_metrics = ["ndcg@10", "ndcg@100", "mrr", "map", "precision@10", "recall@10"]
         for metric in key_metrics:
             if metric in metrics:
                 stats = metrics[metric]
@@ -302,7 +307,12 @@ def evaluate_multiple_runs(
     print(f"{'=' * 70}\n")
 
     # Print comparison if both models evaluated
-    if evaluate_base and evaluate_rlhf and all_results["base"]["runs"] and all_results["rlhf"]["runs"]:
+    if (
+        evaluate_base
+        and evaluate_rlhf
+        and all_results["base"]["runs"]
+        and all_results["rlhf"]["runs"]
+    ):
         print_comparison(all_results)
 
     return all_results
@@ -319,46 +329,23 @@ def print_comparison(all_results: dict):
 
     for dataset in base_agg.keys():
         print(f"\n{dataset.upper()}:")
-        print(f"{'Metric':<20} {'Base (mean)':<15} {'RLHF (mean)':<15} {'Improvement':<15}")
+        print(
+            f"{'Metric':<20} {'Base (mean)':<15} {'RLHF (mean)':<15} {'Improvement':<15}"
+        )
         print("-" * 70)
 
-        key_metrics = ['ndcg@10', 'ndcg@100', 'mrr', 'map', 'precision@10', 'recall@10']
+        key_metrics = ["ndcg@10", "ndcg@100", "mrr", "map", "precision@10", "recall@10"]
         for metric in key_metrics:
             if metric in base_agg[dataset] and metric in rlhf_agg[dataset]:
                 base_val = base_agg[dataset][metric]["mean"]
                 rlhf_val = rlhf_agg[dataset][metric]["mean"]
-                improvement = ((rlhf_val - base_val) / base_val * 100) if base_val != 0 else 0
+                improvement = (
+                    ((rlhf_val - base_val) / base_val * 100) if base_val != 0 else 0
+                )
                 improvement_str = f"{improvement:+.2f}%"
                 print(
                     f"{metric:<20} {base_val:<15.4f} {rlhf_val:<15.4f} {improvement_str:<15}"
                 )
-
-
-# def evaluate(checkpoint_path: str = None, compare_baseline: bool = False):
-#     """
-#     Legacy single evaluation function for backwards compatibility.
-
-#     Args:
-#         checkpoint_path: Path to checkpoint. If None, uses latest.
-#         compare_baseline: Ignored (kept for backwards compatibility).
-
-#     Returns:
-#         Dictionary with evaluation results.
-#     """
-#     config = get_config()
-#     outputs_dir = get_data_path("outputs") / "evaluations"
-
-#     if checkpoint_path is None:
-#         checkpoint_path = get_latest_checkpoint()
-
-#     results = evaluate_single_run(
-#         model_path=checkpoint_path,
-#         model_name="rlhf",
-#         run_number=1,
-#         output_dir=outputs_dir / "rlhf",
-#     )
-
-#     return results
 
 
 if __name__ == "__main__":
