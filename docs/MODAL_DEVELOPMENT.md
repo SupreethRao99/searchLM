@@ -55,18 +55,18 @@ modal serve modal_dev.py
 
 **Terminal 2: Run your workflow**
 ```bash
-# Run baseline - edit baseline.py, save, and re-run this command
-modal run modal_dev.py::run_baseline
-
 # Run training
 modal run modal_dev.py::run_training
 
-# Run evaluation
+# Run evaluation (single run)
 modal run modal_dev.py::run_evaluation
+
+# Run comprehensive evaluation (multiple runs with aggregate metrics)
+modal run modal_dev.py::run_comprehensive_evaluation
 ```
 
 **The workflow:**
-1. Edit your code locally (e.g., `searchlm/workflows/baseline/baseline.py`)
+1. Edit your code locally (e.g., `searchlm/workflows/rlhf/evaluation.py`)
 2. Save the file (Cmd+S / Ctrl+S)
 3. Modal detects the change and reloads (< 2 seconds)
 4. Re-run the command in Terminal 2
@@ -89,7 +89,7 @@ modal shell ta-XXXXXXXXXXXXXXXXXXXXX
 
 # Navigate and run your code
 cd /root/searchlm
-python -m searchlm.workflows.baseline.baseline
+python -m searchlm.workflows.rlhf.evaluation
 ```
 
 ---
@@ -207,11 +207,11 @@ No container restarts. No reconnecting. Just edit and run.
 
 The `modal_dev.py` file provides hot-reloadable wrappers for all major workflows:
 
-#### Baseline Generation
+#### Data Preparation
 ```bash
-modal run modal_dev.py::run_baseline
+modal run modal_dev.py::run_data_prep
 ```
-Wraps `searchlm.workflows.baseline.baseline.main()`. Use this to iterate on query generation logic.
+Wraps `searchlm.workflows.rlhf.data_prep.prepare_training_data()`. Use this to iterate on data loading and preprocessing.
 
 #### Training
 ```bash
@@ -225,16 +225,25 @@ Wraps `searchlm.workflows.rlhf.training.train()`. Use this to iterate on trainin
 
 #### Evaluation
 ```bash
-# Evaluate latest checkpoint
+# Single evaluation run (latest checkpoint)
 modal run modal_dev.py::run_evaluation
 
-# Evaluate specific checkpoint
+# Single evaluation with specific checkpoint
 modal run modal_dev.py::run_evaluation --checkpoint-path /root/searchlm/models/checkpoint-100
 
-# Show baseline comparison
-modal run modal_dev.py::run_evaluation --compare-baseline
+# Comprehensive evaluation (multiple runs, both base and RLHF models)
+modal run modal_dev.py::run_comprehensive_evaluation
+
+# Customize number of runs
+modal run modal_dev.py::run_comprehensive_evaluation --num-runs 5
+
+# Evaluate only base model
+modal run modal_dev.py::run_comprehensive_evaluation --evaluate-base-only
+
+# Evaluate only RLHF model
+modal run modal_dev.py::run_comprehensive_evaluation --evaluate-rlhf-only
 ```
-Wraps `searchlm.workflows.rlhf.evaluation.evaluate()`. Use this to iterate on evaluation metrics and logic.
+Wraps `searchlm.workflows.rlhf.evaluation.evaluate()` and `evaluate_multiple_runs()`. Use this to iterate on evaluation metrics and logic. Results are saved as JSON to volume mounts for auditing.
 
 #### Data Preparation
 ```bash
@@ -247,7 +256,7 @@ For maximum flexibility, run any Python module or script:
 
 ```bash
 # Run any module
-modal run modal_dev.py::run_python --module searchlm.workflows.baseline.baseline
+modal run modal_dev.py::run_python --module searchlm.workflows.rlhf.evaluation
 
 # Run any script
 modal run modal_dev.py::run_python --script scripts/base_evaluation.py
@@ -266,14 +275,13 @@ modal run -i modal_dev.py::interactive_python
 ```
 
 ```python
->>> from searchlm.workflows.baseline.baseline import BaselineGenerator
->>> gen = BaselineGenerator()
->>> gen.config.model.name
-'Qwen/Qwen2.5-3B-Instruct'
+>>> from searchlm.workflows.rlhf.evaluation import evaluate_multiple_runs
+>>> from searchlm import SearchEvaluator
+>>> evaluator = SearchEvaluator(index_path="./modal_data/indices")
 >>> # Test your code interactively...
 ```
 
-### Example: Iterating on Baseline
+### Example: Iterating on Evaluation
 
 Here's a realistic development scenario using hot reload:
 
@@ -286,42 +294,38 @@ $ modal serve modal_dev.py
 
 **Terminal 2:**
 ```bash
-$ modal run modal_dev.py::run_baseline
-# Output shows error: "KeyError: 'temperature' in config"
+$ modal run modal_dev.py::run_comprehensive_evaluation
+# Output shows results for both base and RLHF models
 ```
 
-**Fix the error locally in VSCode:**
+**Add better logging in VSCode:**
 ```python
-# searchlm/workflows/baseline/baseline.py, line 89
-responses = self.engine.generate(
-    prompts, 
-    max_tokens=self.config.baseline.max_tokens,
-    # temperature=self.config.model.temperature,  # ← Remove this line causing error
-)
+# searchlm/workflows/rlhf/evaluation.py
+def evaluate_single_run(...):
+    print(f"🔥 Starting evaluation run {run_number} for {model_name}")
+    # ... rest of code
 ```
 
 **Save (Cmd+S). Terminal 1 shows:**
 ```
-🔄 File change detected: searchlm/workflows/baseline/baseline.py
+🔄 File change detected: searchlm/workflows/rlhf/evaluation.py
 🔄 Reloading app...
 ✓ App reloaded in 1.9s
 ```
 
 **Terminal 2 - Re-run:**
 ```bash
-$ modal run modal_dev.py::run_baseline
-Loading dataset mteb/scifact...
-Loaded 300 queries from dataset
-Generating queries...
-# ✅ Success! No more error
+$ modal run modal_dev.py::run_comprehensive_evaluation
+🔥 Starting evaluation run 1 for base
+# ✅ Better logging!
 ```
 
-**Continue iterating - adjust batch size in config:**
+**Continue iterating - adjust number of runs in config:**
 ```yaml
 # config/default.yaml
-baseline:
-  batch_size: 8192  # ← Changed from 4096
-  max_tokens: 1000
+evaluation:
+  datasets: ["nfcorpus", "scifact"]
+  default_k: 100
 ```
 
 **Save. Terminal 1:**
@@ -331,10 +335,10 @@ baseline:
 ✓ App reloaded in 2.1s
 ```
 
-**Terminal 2 - Re-run to test new batch size:**
+**Terminal 2 - Re-run to test changes:**
 ```bash
-$ modal run modal_dev.py::run_baseline
-# Runs with new batch size
+$ modal run modal_dev.py::run_comprehensive_evaluation --num-runs 5
+# Runs 5 times with new config
 ```
 
 **Total iteration time:** ~10 seconds per change (vs 60+ seconds with container restarts)
@@ -508,9 +512,9 @@ ls modal_data
 # Save data that persists across sessions
 echo "experiment_results" > modal_data/outputs/results.txt
 
-# Run baseline (writes to modal_data/outputs/ via config)
+# Run evaluation (writes to modal_data/outputs/ via config)
 # NOTE: Must run inside container for data to persist to volume!
-python -m searchlm.workflows.baseline.baseline
+python -m searchlm.workflows.rlhf.evaluation
 
 # Check what's stored
 ls -lh modal_data
@@ -737,7 +741,7 @@ nvidia-smi
 
 ✅ **Use Hot Reload Mode When:**
 
-- Iterating on a specific workflow (baseline, training, evaluation)
+- Iterating on a specific workflow (training, evaluation, data prep)
 - Testing configuration changes
 - Fixing bugs and re-running quickly
 - Developing new features in existing modules
@@ -745,8 +749,9 @@ nvidia-smi
 
 **Example scenarios:**
 - "I need to adjust the reward function weights and see how it affects training"
-- "The baseline is failing on edge cases, let me add validation and test"
+- "The evaluation is failing on edge cases, let me add validation and test"
 - "I want to try different hyperparameters for evaluation"
+- "I want to run multiple evaluation runs and compute aggregate statistics"
 
 ### When to Use Interactive Shell Mode
 
@@ -775,13 +780,13 @@ The two modes complement each other perfectly. Here's a typical development day:
 $ modal serve modal_dev.py
 ✓ Monitoring for changes...
 
-# Terminal 2: Iterate on baseline
-$ modal run modal_dev.py::run_baseline
-# Edit baseline.py, save, re-run
-$ modal run modal_dev.py::run_baseline
+# Terminal 2: Iterate on evaluation
+$ modal run modal_dev.py::run_evaluation
+# Edit evaluation.py, save, re-run
+$ modal run modal_dev.py::run_evaluation
 # Edit prompts.py, save, re-run
-$ modal run modal_dev.py::run_baseline
-# ✅ Baseline working!
+$ modal run modal_dev.py::run_comprehensive_evaluation
+# ✅ Evaluation working!
 ```
 
 #### Afternoon: Deep Debugging with Interactive Shell
@@ -827,9 +832,9 @@ Follow these tests to verify the hot reload setup works correctly.
 - Modal CLI installed and authenticated (`modal token set`)
 - Access to Modal GPUs (L4 for baseline, H100 for training)
 
-### Test 1: Basic Hot Reload - Baseline Workflow
+### Test 1: Basic Hot Reload - Evaluation Workflow
 
-Verifies hot reload works with the baseline workflow.
+Verifies hot reload works with the evaluation workflow.
 
 **Steps:**
 
@@ -838,39 +843,37 @@ Verifies hot reload works with the baseline workflow.
    modal serve modal_dev.py
    ```
 
-2. **Run baseline** (Terminal 2):
+2. **Run evaluation** (Terminal 2):
    ```bash
-   modal run modal_dev.py::run_baseline
+   modal run modal_dev.py::run_evaluation
    ```
 
-3. **Make a code change** - Edit `searchlm/workflows/baseline/baseline.py`:
+3. **Make a code change** - Edit `searchlm/workflows/rlhf/evaluation.py`:
    ```python
-   def generate(self) -> str:
-       queries = self.load_dataset()
+   def evaluate_single_run(...):
+       # ADD THIS LINE at the start of function:
+       print(f"🔥 HOT RELOAD TEST: Evaluating {model_name} - Run {run_number}")
        
-       # ADD THIS LINE:
-       print(f"🔥 HOT RELOAD TEST: Processing {len(queries)} queries")
-       
-       prompts = [create_chat_prompt(q.text) for q in queries]
+       config = get_config()
        # ... rest of code
    ```
    Save the file (Cmd+S / Ctrl+S).
 
 4. **Verify reload in Terminal 1**:
    ```
-   🔄 File change detected: searchlm/workflows/baseline/baseline.py
+   🔄 File change detected: searchlm/workflows/rlhf/evaluation.py
    🔄 Reloading app...
    ✓ App reloaded in 1.8s
    ```
 
-5. **Re-run baseline** (Terminal 2):
+5. **Re-run evaluation** (Terminal 2):
    ```bash
-   modal run modal_dev.py::run_baseline
+   modal run modal_dev.py::run_evaluation
    ```
    
    Expected output should include:
    ```
-   🔥 HOT RELOAD TEST: Processing 300 queries
+   🔥 HOT RELOAD TEST: Evaluating rlhf - Run 1
    ```
 
 **✅ Test passes if:** You see the new debug print without restarting serve.
@@ -899,26 +902,26 @@ Verifies config file changes trigger hot reload.
    ✓ App reloaded in 2.1s
    ```
 
-3. **Add debug to verify** - Edit `searchlm/workflows/baseline/baseline.py`:
+3. **Add debug to verify** - Edit `searchlm/workflows/rlhf/evaluation.py`:
    ```python
-   def generate(self) -> str:
-       queries = self.load_dataset()
+   def evaluate_multiple_runs(...):
+       config = get_config()
        
        # ADD THIS:
-       print(f"🔥 Config test: batch_size = {self.config.baseline.batch_size}")
+       print(f"🔥 Config test: datasets = {config.evaluation.datasets}")
        
-       prompts = [create_chat_prompt(q.text) for q in queries]
+       # ... rest of code
    ```
    Save and wait for reload.
 
 4. **Run and verify**:
    ```bash
-   modal run modal_dev.py::run_baseline
+   modal run modal_dev.py::run_comprehensive_evaluation
    ```
    
    Expected output:
    ```
-   🔥 Config test: batch_size = 8192
+   🔥 Config test: datasets = ['nfcorpus', 'scifact']
    ```
 
 **✅ Test passes if:** New batch size is reflected without restart.
@@ -1023,21 +1026,21 @@ Verifies syntax errors are caught during reload.
 
 **Steps:**
 
-1. **Introduce a syntax error** - Edit `searchlm/workflows/baseline/baseline.py`:
+1. **Introduce a syntax error** - Edit `searchlm/workflows/rlhf/evaluation.py`:
    ```python
-   def generate(self) -> str:
-       queries = self.load_dataset()
+   def evaluate_single_run(...):
+       config = get_config()
        
        # ADD INVALID SYNTAX:
        print("This is missing a closing quote
        
-       prompts = [create_chat_prompt(q.text) for q in queries]
+       # ... rest of code
    ```
    Save the file.
 
 2. **Check Terminal 1**:
    ```
-   🔄 File change detected: searchlm/workflows/baseline/baseline.py
+   🔄 File change detected: searchlm/workflows/rlhf/evaluation.py
    🔄 Reloading app...
    ❌ Error reloading: SyntaxError: unterminated string literal
    ```
@@ -1046,7 +1049,7 @@ Verifies syntax errors are caught during reload.
 
 4. **Verify reload works**:
    ```
-   🔄 File change detected: searchlm/workflows/baseline/baseline.py
+   🔄 File change detected: searchlm/workflows/rlhf/evaluation.py
    🔄 Reloading app...
    ✓ App reloaded in 1.9s
    ```
@@ -1072,10 +1075,10 @@ Verifies the existing interactive shell mode still works.
    modal shell ta-XXXXXXXXXXXXXXXXXXXXX
    ```
 
-4. **Run baseline manually**:
+4. **Run evaluation manually**:
    ```bash
    cd /root/searchlm
-   python -m searchlm.workflows.baseline.baseline
+   python -m searchlm.workflows.rlhf.evaluation
    ```
 
 **✅ Test passes if:** Interactive shell mode works as before.
@@ -1097,9 +1100,9 @@ Verifies outputs are saved to the persistent volume.
    modal serve modal_dev.py
    ```
 
-2. **Run baseline** (Terminal 2):
+2. **Run evaluation** (Terminal 2):
    ```bash
-   modal run modal_dev.py::run_baseline
+   modal run modal_dev.py::run_comprehensive_evaluation
    ```
 
 3. **Check volume contents**:
@@ -1107,7 +1110,7 @@ Verifies outputs are saved to the persistent volume.
    modal volume ls searchlm
    ```
    
-   Expected: `outputs/scifact_generated_queries.tsv` with recent timestamp
+   Expected: `outputs/evaluations/base/` and `outputs/evaluations/rlhf/` directories with JSON files
 
 **✅ Test passes if:** Output files are visible in the volume.
 
@@ -1263,13 +1266,13 @@ chmod +x /root/searchlm/your_script.py
 modal serve modal_dev.py
 
 # Run workflows (Terminal 2)
-modal run modal_dev.py::run_baseline
+modal run modal_dev.py::run_data_prep
 modal run modal_dev.py::run_training
 modal run modal_dev.py::run_training --use-vllm-server
 modal run modal_dev.py::run_evaluation
 modal run modal_dev.py::run_evaluation --checkpoint-path /path/to/checkpoint
-modal run modal_dev.py::run_evaluation --compare-baseline
-modal run modal_dev.py::run_data_prep
+modal run modal_dev.py::run_comprehensive_evaluation
+modal run modal_dev.py::run_comprehensive_evaluation --num-runs 5
 modal run modal_dev.py::run_python --module your.module
 modal run modal_dev.py::run_python --script your_script.py
 modal run modal_dev.py::run_python --script your_script.py --args "--verbose"
@@ -1286,7 +1289,7 @@ modal run modal_infra.py::dev_shell
 modal container list
 modal shell ta-XXXXXXXXXXXXXXXXXXXXX
 cd /root/searchlm
-python -m searchlm.workflows.baseline.baseline
+python -m searchlm.workflows.rlhf.evaluation
 
 # Execute single command without attaching
 modal container exec ta-XXXXX nvidia-smi

@@ -17,18 +17,18 @@ SearchLM enables research and development of search query generation systems thr
 
 - **Dataset Management**: Load and ingest NFCorpus and SciFact datasets from HuggingFace MTEB
 - **Full-Text Search**: Tantivy-based search engine for indexing and querying documents
-- **Evaluation Framework**: Comprehensive IR metrics (NDCG, MRR, Precision@K, Recall@K, MAP)
-- **Baseline Generation**: Generate search queries using instruction-tuned LLMs
+- **Evaluation Framework**: Comprehensive IR metrics (NDCG, MRR, Precision@K, Recall@K, MAP) with multiple runs and aggregate statistics
 - **RLHF Training**: Train models using Group Relative Policy Optimization (GRPO) with verifiable rewards
+- **Unified Evaluation**: Compare base and RLHF models with JSON audit logs and aggregate metrics
 
 ## Features
 
 - Dataset loading with train/dev/test splits and relevance judgments (qrels)
 - Unified search index supporting multiple datasets
 - Full-text search powered by Tantivy
-- Comprehensive evaluation with standard IR metrics
-- Baseline query generation workflow
+- Comprehensive evaluation with standard IR metrics, multiple runs, and aggregate statistics
 - RLHF training workflow with GRPO
+- Unified evaluation for base and fine-tuned models with JSON audit logs
 - Configuration management via YAML
 - vLLM integration for efficient inference
 
@@ -153,40 +153,14 @@ evaluator.print_metrics(results)
 
 ## Workflows
 
-### Baseline Query Generation
+### RLHF Training and Evaluation
 
-Generate baseline queries using instruction-tuned LLMs:
-
-```bash
-# Generate queries for SciFact (default)
-uv run python -m searchlm.workflows.baseline.baseline
-
-# Or use the class directly in Python:
-from searchlm.workflows.baseline.baseline import BaselineGenerator
-
-# SciFact
-generator = BaselineGenerator(
-    dataset_name="mteb/scifact",
-    output_filename="scifact_generated_queries.tsv"
-)
-generator.generate()
-
-# NFCorpus
-generator = BaselineGenerator(
-    dataset_name="mteb/nfcorpus",
-    output_filename="nfcorpus_generated_queries.tsv"
-)
-generator.generate()
-```
-
-### RLHF Training
-
-Train models using Group Relative Policy Optimization (GRPO):
+Train models using Group Relative Policy Optimization (GRPO) and evaluate with comprehensive metrics:
 
 ```python
 from searchlm.workflows.rlhf.data_prep import prepare_training_data
 from searchlm.workflows.rlhf.training import train
-from searchlm.workflows.rlhf.evaluation import evaluate
+from searchlm.workflows.rlhf.evaluation import evaluate_multiple_runs
 
 # Step 1: Prepare training data
 prepare_training_data()
@@ -195,8 +169,20 @@ prepare_training_data()
 train(use_vllm_server=False)  # 1 GPU mode (colocate)
 # train(use_vllm_server=True)  # 2 GPU mode (server)
 
-# Step 3: Evaluate
-evaluate(compare_baseline=True)
+# Step 3: Comprehensive Evaluation
+# Run multiple evaluations for both base and RLHF models
+# Results saved as JSON to volume mounts for auditing
+evaluate_multiple_runs(
+    base_model_name="Qwen/Qwen2.5-3B-Instruct",
+    checkpoint_path=None,  # Uses latest checkpoint
+    num_runs=3,  # Number of evaluation runs per model
+    evaluate_base=True,  # Evaluate base model
+    evaluate_rlhf=True,  # Evaluate RLHF model
+)
+
+# For single evaluation (backwards compatible):
+from searchlm.workflows.rlhf.evaluation import evaluate
+evaluate()
 ```
 
 ## Cloud Development with Modal
@@ -285,13 +271,11 @@ searchlm/
 │   │   ├── domain.py            # Core domain models
 │   │   └── evaluation.py        # Evaluation models
 │   └── workflows/
-│       ├── baseline/
-│       │   └── baseline.py      # BaselineGenerator class (merged CLI + sampling)
 │       └── rlhf/
 │           ├── data_prep.py     # Training data preparation
 │           ├── reward.py        # Reward function for GRPO
 │           ├── training.py      # GRPO training
-│           └── evaluation.py    # Model evaluation
+│           └── evaluation.py    # Unified evaluation (base + RLHF, multiple runs)
 ├── config/
 │   └── default.yaml             # Configuration file
 ├── scripts/
@@ -306,7 +290,8 @@ searchlm/
 - ✅ Added shared helpers to reduce code duplication (~250 lines saved)
 - ✅ Simplified SearchEvaluator (78 lines saved)
 - ✅ Consolidated prompt utilities across workflows
-- ✅ Merged baseline: CLI + sampling → single `BaselineGenerator` class (2 files → 1)
+- ✅ Unified evaluation: Removed baseline directory, using RLHF evaluation for both base and fine-tuned models
+- ✅ Enhanced evaluation with multiple runs, aggregate metrics, and JSON audit logs
 - ✅ Simplified RLHF: Removed CLI argparse, clean separation of concerns (4 files)
 - ✅ All imports at the top of files (no lazy imports)
 - ✅ Fixed config.py cache bug
