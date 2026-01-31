@@ -25,7 +25,7 @@ training:
   logging_steps: 10
   save_steps: 50
   save_total_limit: 3
-  vllm_gpu_memory_utilization: 0.35  # Reduced from 0.4 to give training more room
+  vllm_gpu_memory_utilization: 0.25  # Reduced from 0.4 to give training more room
   wandb_run_name:
     colocate: "searchlm-grpo-qwen2.5-3b"
     server: "searchlm-grpo-qwen2.5-3b-server"
