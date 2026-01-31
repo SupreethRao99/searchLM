@@ -1,0 +1,91 @@
+{
+  "model_name": "rlhf",
+  "model_path": "/root/searchlm/modal_data/models/checkpoint-1146",
+  "run_number": 2,
+  "timestamp": "20260131_152019",
+  "results": {
+    "scifact": {
+      "ndcg@10": 0.6557716331046267,
+      "ndcg@100": 0.6720753925726454,
+      "mrr": 0.6131549122730225,
+      "precision@10": 0.08724279835390947,
+      "recall@10": 0.7872615039281706,
+      "map": 0.6041712325495213,
+      "avg_retrieved": 71.48821548821549,
+      "avg_relevant": 1.1313131313131313,
+      "num_queries": 297,
+      "num_failed": 3,
+      "failed_queries": [
+        {
+          "query_id": "744",
+          "query_text": "Macropinocytosis contributes to a cell's supply of amino acids",
+          "error": "Syntax Error: Macropinocytosis contributes to a cell's supply of amino acids"
+        },
+        {
+          "query_id": "880",
+          "query_text": "occupancy ribosomes IncRNA 5'UTR",
+          "error": "Syntax Error: occupancy ribosomes IncRNA 5'UTR"
+        },
+        {
+          "query_id": "1232",
+          "query_text": "minor G allele FOXO3 severe symptoms Crohn's Disease",
+          "error": "Syntax Error: minor G allele FOXO3 severe symptoms Crohn's Disease"
+        }
+      ]
+    },
+    "nfcorpus": {
+      "ndcg@10": 0.5465439929006288,
+      "ndcg@100": 0.5424827675554093,
+      "mrr": 0.528552492379028,
+      "precision@10": 0.2956601158982112,
+      "recall@10": 0.1576608119487331,
+      "map": 0.4085567830408072,
+      "avg_retrieved": 47.88253968253968,
+      "avg_relevant": 38.33015873015873,
+      "num_queries": 315,
+      "num_failed": 8,
+      "failed_queries": [
+        {
+          "query_id": "PLAIN-1320",
+          "query_text": "Harvard Physicians' Study II",
+          "error": "Syntax Error: Harvard Physicians' Study II"
+        },
+        {
+          "query_id": "PLAIN-1429",
+          "query_text": "Iowa Women's Health Study",
+          "error": "Syntax Error: Iowa Women's Health Study"
+        },
+        {
+          "query_id": "PLAIN-1601",
+          "query_text": "computer memory someone's memory memory concept",
+          "error": "Syntax Error: computer memory someone's memory memory concept"
+        },
+        {
+          "query_id": "PLAIN-1805",
+          "query_text": "Parkinson's disease",
+          "error": "Syntax Error: Parkinson's disease"
+        },
+        {
+          "query_id": "PLAIN-2145",
+          "query_text": "St John's wort",
+          "error": "Syntax Error: St John's wort"
+        },
+        {
+          "query_id": "PLAIN-2940",
+          "query_text": "Crohn's Disease dietary treatment",
+          "error": "Syntax Error: Crohn's Disease dietary treatment"
+        },
+        {
+          "query_id": "PLAIN-3053",
+          "query_text": "Dragon's Blood",
+          "error": "Syntax Error: Dragon's Blood"
+        },
+        {
+          "query_id": "PLAIN-3221",
+          "query_text": "dietary Alzheimer's disease theory",
+          "error": "Syntax Error: dietary Alzheimer's disease theory"
+        }
+      ]
+    }
+  }
+}

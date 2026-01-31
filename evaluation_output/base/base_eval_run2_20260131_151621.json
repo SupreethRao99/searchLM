@@ -1,0 +1,161 @@
+{
+  "model_name": "base",
+  "model_path": "Qwen/Qwen2.5-3B-Instruct",
+  "run_number": 2,
+  "timestamp": "20260131_151621",
+  "results": {
+    "scifact": {
+      "ndcg@10": 0.13756364893456222,
+      "ndcg@100": 0.15190957133338442,
+      "mrr": 0.12938739345645603,
+      "precision@10": 0.03192453451969023,
+      "recall@10": 0.1624567474048443,
+      "map": 0.12944787131669316,
+      "avg_retrieved": 20.311418685121108,
+      "avg_relevant": 1.1349480968858132,
+      "num_queries": 289,
+      "num_failed": 11,
+      "failed_queries": [
+        {
+          "query_id": "219",
+          "query_text": "\"CX3CR1\" Th2 cells \"suppresses airway inflammation\" AND",
+          "error": "Syntax Error: \"CX3CR1\" Th2 cells \"suppresses airway inflammation\" AND"
+        },
+        {
+          "query_id": "314",
+          "query_text": "\"deamination of cytidine to uridine on the minus strand of viral DNA\" AND catastrophic G-to-A mutations IN viral genome",
+          "error": "Syntax Error: \"deamination of cytidine to uridine on the minus strand of viral DNA\" AND catastrophic G-to-A mutations IN viral genome"
+        },
+        {
+          "query_id": "475",
+          "query_text": "\"primary glycometabolic pathways\" AND \"glycolysis\" IN cells",
+          "error": "Syntax Error: \"primary glycometabolic pathways\" AND \"glycolysis\" IN cells"
+        },
+        {
+          "query_id": "808",
+          "query_text": "\"termination events\" in:okazaki fragments sequence specific",
+          "error": "Field does not exist: 'in'"
+        },
+        {
+          "query_id": "845",
+          "query_text": "\"Neutrophil extracellular traps (NETs)\" ANCA-stimulated neutrophils AND",
+          "error": "Syntax Error: \"Neutrophil extracellular traps (NETs)\" ANCA-stimulated neutrophils AND"
+        },
+        {
+          "query_id": "880",
+          "query_text": "\"Occupancy ribosomes\" + \"IncRNAs\" + \"5'UTR\" -\"mRNA\" -\"coding\" OR \"IncRNAs\" + \"5'UTR\" -\"mRNA\" -\"coding\"",
+          "error": "Syntax Error: \"Occupancy ribosomes\" + \"IncRNAs\" + \"5'UTR\" -\"mRNA\" -\"coding\" OR \"IncRNAs\" + \"5'UTR\" -\"mRNA\" -\"coding\""
+        },
+        {
+          "query_id": "982",
+          "query_text": "(Proteins synthesized at the growth cone) AND (Proteins from the cell body) OR ubiquitination rate growth cone > ubiquitination rate cell body",
+          "error": "Unsupported query: Range query need to target a specific field."
+        },
+        {
+          "query_id": "1107",
+          "query_text": "\"subcutaneous fat depots OR brown fat\" cold exposure AND",
+          "error": "Syntax Error: \"subcutaneous fat depots OR brown fat\" cold exposure AND"
+        },
+        {
+          "query_id": "1179",
+          "query_text": "\"PRR MDA5 central DExD/H RNA helices domain\" AND PRR MDA5 central DExD/H RNA helices domain NOT NOT",
+          "error": "Syntax Error: \"PRR MDA5 central DExD/H RNA helices domain\" AND PRR MDA5 central DExD/H RNA helices domain NOT NOT"
+        },
+        {
+          "query_id": "1204",
+          "query_text": "\"H3K4me3 AND H3K79me2\" IN FILETYPE:pdf AND \"quiescent hair follicle stem cells\"",
+          "error": "Syntax Error: \"H3K4me3 AND H3K79me2\" IN FILETYPE:pdf AND \"quiescent hair follicle stem cells\""
+        },
+        {
+          "query_id": "1335",
+          "query_text": "\"UCB T cells\" \"TCR diversity\" \"transplantation\" AND",
+          "error": "Syntax Error: \"UCB T cells\" \"TCR diversity\" \"transplantation\" AND"
+        }
+      ]
+    },
+    "nfcorpus": {
+      "ndcg@10": 0.3437537528159813,
+      "ndcg@100": 0.34250188332208775,
+      "mrr": 0.32839584707967034,
+      "precision@10": 0.21727410489546412,
+      "recall@10": 0.0864192591743164,
+      "map": 0.28602404232505724,
+      "avg_retrieved": 20.741100323624597,
+      "avg_relevant": 38.68608414239482,
+      "num_queries": 309,
+      "num_failed": 14,
+      "failed_queries": [
+        {
+          "query_id": "PLAIN-78",
+          "query_text": "meat purge Cola INurl:edu OR meat purge Cola site:gov OR meat purge Cola site:org",
+          "error": "Field does not exist: 'INurl'"
+        },
+        {
+          "query_id": "PLAIN-123",
+          "query_text": "\"citrus OR citrus fruit\" + \"warm hands\" + \"maintain warmth\" + \"insulate\" + \"warm\" -\"might not help\"",
+          "error": "Syntax Error: \"citrus OR citrus fruit\" + \"warm hands\" + \"maintain warmth\" + \"insulate\" + \"warm\" -\"might not help\""
+        },
+        {
+          "query_id": "PLAIN-153",
+          "query_text": "\"How Should I Take Probiotics\" site:com site:org site:edu\n\"instructions for taking probiotics\" OR \"guidelines for probiotic use\" OR \"how to use probiotics\"\nAND NOT \"no need to take\"",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-371",
+          "query_text": "\"in vitro avocado data\" OR \"in vitro avocado data\" OR \"in vitro avocado research\" OR \"in vitro avocado study\" OR \"in vitro avocado experiment\" OR \"in vitro avocado study update\" OR \"in vitro avocado research update\"\nNOT scary - This might be redundant as \"scary\" is not a keyword that would typically be excluded, but I've included it to be thorough.\n\"scary\" - This ensures that if the update is about something other than the data, it will be excluded.",
+          "error": "Syntax Error: \"in vitro avocado data\" OR \"in vitro avocado data\" OR \"in vitro avocado research\" OR \"in vitro avocado study\" OR \"in vitro avocado experiment\" OR \"in vitro avocado study update\" OR \"in vitro avocado research update\"\nNOT scary - This might be redundant as \"scary\" is not a keyword that would typically be excluded, but I've included it to be thorough.\n\"scary\" - This ensures that if the update is about something other than the data, it will be excluded."
+        },
+        {
+          "query_id": "PLAIN-430",
+          "query_text": "\"krill oil supplements\" \"fish oil capsules\" \"better than\" site:com site:org site:edu",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-613",
+          "query_text": "\"ascorbic acid\" OR \"vitamin C\" OR \"ascorbic acid\" OR \"vitamin C\"\n\"",
+          "error": "Syntax Error: \"ascorbic acid\" OR \"vitamin C\" OR \"ascorbic acid\" OR \"vitamin C\"\n\""
+        },
+        {
+          "query_id": "PLAIN-806",
+          "query_text": "\"caloric restriction\" AND site:edu OR site:org OR site:gov OR site:info",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-1028",
+          "query_text": "\"diet AND scoring AND nutritional OR dietary assessment OR score OR evaluation",
+          "error": "Syntax Error: \"diet AND scoring AND nutritional OR dietary assessment OR score OR evaluation"
+        },
+        {
+          "query_id": "PLAIN-1784",
+          "query_text": "oxen meat AND",
+          "error": "Syntax Error: oxen meat AND"
+        },
+        {
+          "query_id": "PLAIN-2071",
+          "query_text": "<think>\nThe question \"serotonin\" is quite generic, so to generate a specific and relevant boolean search query, we need to provide more context or specify what kind of results we are looking for. Without additional context, we can't determine whether the user is interested in the chemical, its functions in the body, its role in mood, or other related topics. For the sake of this example, I will assume the user is interested in the chemical aspect of serotonin.\n</think>\n<query>\n\"serotonin chemical\" NOT \"mental health\" NOT \"neurotransmitter\" NOT \"mood\"",
+          "error": "Syntax Error: <think>\nThe question \"serotonin\" is quite generic, so to generate a specific and relevant boolean search query, we need to provide more context or specify what kind of results we are looking for. Without additional context, we can't determine whether the user is interested in the chemical, its functions in the body, its role in mood, or other related topics. For the sake of this example, I will assume the user is interested in the chemical aspect of serotonin.\n</think>\n<query>\n\"serotonin chemical\" NOT \"mental health\" NOT \"neurotransmitter\" NOT \"mood\""
+        },
+        {
+          "query_id": "PLAIN-2081",
+          "query_text": "\"shelf life\" NOT \"food safety\" NOT \"expiration date\" NOT \"storage conditions",
+          "error": "Syntax Error: \"shelf life\" NOT \"food safety\" NOT \"expiration date\" NOT \"storage conditions"
+        },
+        {
+          "query_id": "PLAIN-2134",
+          "query_text": "Splenda site:com site:org site:edu",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-2710",
+          "query_text": "\"Artificial Food Colors and ADHD\" AND",
+          "error": "Syntax Error: \"Artificial Food Colors and ADHD\" AND"
+        },
+        {
+          "query_id": "PLAIN-2940",
+          "query_text": "\"Dietary Treatment\" AND Crohn's Disease",
+          "error": "Syntax Error: \"Dietary Treatment\" AND Crohn's Disease"
+        }
+      ]
+    }
+  }
+}

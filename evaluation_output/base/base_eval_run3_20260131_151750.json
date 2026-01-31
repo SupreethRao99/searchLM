@@ -1,0 +1,166 @@
+{
+  "model_name": "base",
+  "model_path": "Qwen/Qwen2.5-3B-Instruct",
+  "run_number": 3,
+  "timestamp": "20260131_151750",
+  "results": {
+    "scifact": {
+      "ndcg@10": 0.1869615870646007,
+      "ndcg@100": 0.18996856794652917,
+      "mrr": 0.17405023659837524,
+      "precision@10": 0.04817073170731707,
+      "recall@10": 0.22531939605110335,
+      "map": 0.16902041176907706,
+      "avg_retrieved": 20.226480836236934,
+      "avg_relevant": 1.1358885017421603,
+      "num_queries": 287,
+      "num_failed": 13,
+      "failed_queries": [
+        {
+          "query_id": "3",
+          "query_text": "\"1000 Genomes Project\" AND (rare variants OR larger penetrance effects OR genetic variation) AND (common variants -OR)",
+          "error": "Syntax Error: \"1000 Genomes Project\" AND (rare variants OR larger penetrance effects OR genetic variation) AND (common variants -OR)"
+        },
+        {
+          "query_id": "236",
+          "query_text": "\"(cell autonomous sex determination AND somatic cells) OR Passeriformes\"\n\"",
+          "error": "Syntax Error: \"(cell autonomous sex determination AND somatic cells) OR Passeriformes\"\n\""
+        },
+        {
+          "query_id": "237",
+          "query_text": "\"(cells lacking clpC NOT clpC) AND (defect IN sporulation efficiency) AND (Bacillus subtilis) AND (sporulation)",
+          "error": "Syntax Error: \"(cells lacking clpC NOT clpC) AND (defect IN sporulation efficiency) AND (Bacillus subtilis) AND (sporulation)"
+        },
+        {
+          "query_id": "279",
+          "query_text": "\"Commelina yellow mottle virus\" AND genome:7489bp",
+          "error": "Field does not exist: 'genome'"
+        },
+        {
+          "query_id": "521",
+          "query_text": "\"High-sensitivity cardiac troponin T\" NOT \"diagnostic\" + \"acute myocardial injury\" -\"less than 3 hours\"",
+          "error": "Syntax Error: \"High-sensitivity cardiac troponin T\" NOT \"diagnostic\" + \"acute myocardial injury\" -\"less than 3 hours\""
+        },
+        {
+          "query_id": "636",
+          "query_text": "\"PTEN\" AND \"converts\" AND (Ptdlns(3,4)P2 OR PtdIns(3,4)P2) AND \"phosphatidylinositol 4-phosphate\"",
+          "error": "Syntax Error: \"PTEN\" AND \"converts\" AND (Ptdlns(3,4)P2 OR PtdIns(3,4)P2) AND \"phosphatidylinositol 4-phosphate\""
+        },
+        {
+          "query_id": "700",
+          "query_text": "PIN1 localization Arabidopsis embryo VPS9a NOT",
+          "error": "Syntax Error: PIN1 localization Arabidopsis embryo VPS9a NOT"
+        },
+        {
+          "query_id": "993",
+          "query_text": "Pyridostatin G-quadruplex telomeric region destabilizes AND",
+          "error": "Syntax Error: Pyridostatin G-quadruplex telomeric region destabilizes AND"
+        },
+        {
+          "query_id": "1062",
+          "query_text": "'\"S-nitrosylated GAPDH\" physiologically transnitrosylates histone deacetylases",
+          "error": "Syntax Error: '\"S-nitrosylated GAPDH\" physiologically transnitrosylates histone deacetylases"
+        },
+        {
+          "query_id": "1104",
+          "query_text": "\"(stroke patients AND direct oral anticoagulants) AND NOT (stroke patients AND warfarin) IN-HOSPITAL MORTALITY AND lower risk",
+          "error": "Syntax Error: \"(stroke patients AND direct oral anticoagulants) AND NOT (stroke patients AND warfarin) IN-HOSPITAL MORTALITY AND lower risk"
+        },
+        {
+          "query_id": "1179",
+          "query_text": "\"PRR MDA5\" central DExD/H RNA helices domain AND",
+          "error": "Syntax Error: \"PRR MDA5\" central DExD/H RNA helices domain AND"
+        },
+        {
+          "query_id": "1196",
+          "query_text": "\"safe places to study\" AND (\"availability\" OR \"effectiveness\") AND goal:decreasing homelessness",
+          "error": "Field does not exist: 'goal'"
+        },
+        {
+          "query_id": "1259",
+          "query_text": "\"breast cancer patient\" \"capacity to metabolize tamoxifen\" \"treatment outcome\" \"genetic make-up\" (AND) -treatment outcome",
+          "error": "Syntax Error: \"breast cancer patient\" \"capacity to metabolize tamoxifen\" \"treatment outcome\" \"genetic make-up\" (AND) -treatment outcome"
+        }
+      ]
+    },
+    "nfcorpus": {
+      "ndcg@10": 0.3345145553408342,
+      "ndcg@100": 0.33972215536445954,
+      "mrr": 0.3218437893201935,
+      "precision@10": 0.19497183819764466,
+      "recall@10": 0.08471419899282885,
+      "map": 0.2857894716039154,
+      "avg_retrieved": 20.97741935483871,
+      "avg_relevant": 38.616129032258065,
+      "num_queries": 310,
+      "num_failed": 13,
+      "failed_queries": [
+        {
+          "query_id": "PLAIN-165",
+          "query_text": "\"Breast Cancer\" \"Alcohol\" \"safe limit\" AND",
+          "error": "Syntax Error: \"Breast Cancer\" \"Alcohol\" \"safe limit\" AND"
+        },
+        {
+          "query_id": "PLAIN-196",
+          "query_text": "Avoiding Titanium Dioxide site:news OR Avoiding Titanium Dioxide site:sciencedirect.com",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-238",
+          "query_text": "\"chemically contaminated\" OR \"contaminated by chemicals\" OR \"human exposure to chemicals\" OR \"human health risk from chemicals\" NOT \"environmental contamination\" NOT \"pesticide use\" NOT \"agricultural chemicals\" NOT \"industrial chemicals\" NOT \"food safety\" site:gov AND site:edu AND site:org AND \"human health risks\" AND \"chronic exposure\" AND \"long-term effects\" AND \"recent studies\"",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-946",
+          "query_text": "\"coma\" AND site:org",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-1309",
+          "query_text": "halibut AND site:.com",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-1557",
+          "query_text": "magnesium site:com site:org site:edu",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-1601",
+          "query_text": "<think>\nThe question \"memory\" is likely asking about documents related to the word \"memory\" in general, but we need to be more specific to get the most relevant results. Without additional context, we can assume the user is looking for information about computer memory, as this is a common topic associated with the word \"memory.\" We will use the term \"computer memory\" in our search query.\n</think>\n<query>\n\"computer memory\"",
+          "error": "Unsupported query: Range query need to target a specific field."
+        },
+        {
+          "query_id": "PLAIN-2291",
+          "query_text": "\"ultra-processed foods\" AND site:edu OR site:gov OR site:org",
+          "error": "Field does not exist: 'site'"
+        },
+        {
+          "query_id": "PLAIN-2700",
+          "query_text": "\"cardiovascular disease\" NOT adult - NOT childhood",
+          "error": "Syntax Error: \"cardiovascular disease\" NOT adult - NOT childhood"
+        },
+        {
+          "query_id": "PLAIN-3053",
+          "query_text": "Dragon's Blood",
+          "error": "Syntax Error: Dragon's Blood"
+        },
+        {
+          "query_id": "PLAIN-3221",
+          "query_text": "\"Dietary Theory Alzheimer's disease\" AND Alzheimer's disease",
+          "error": "Syntax Error: \"Dietary Theory Alzheimer's disease\" AND Alzheimer's disease"
+        },
+        {
+          "query_id": "PLAIN-3261",
+          "query_text": "<think>\nThe question \"Update on Herbalife\u00ae\" is asking for the most recent information or news related to the company Herbalife. To generate a specific and relevant boolean search query, we should use the phrase search operator to ensure that both \"Herbalife\" and \"Herbalife\u00ae\" are included, as they might be treated as the same entity in the search results. Additionally, we can use the OR operator to include variations in the search query, such as \"Herbalife\" and \"Herbalife Inc.\".\n\n</think>\n<query>\n\"Herbalife OR Herbalife Inc.\"",
+          "error": "Unsupported query: Range query need to target a specific field."
+        },
+        {
+          "query_id": "PLAIN-3402",
+          "query_text": "\"300 foods antioxidant content\" site:fooddatabase.com site:foodresearchlab.org",
+          "error": "Field does not exist: 'site'"
+        }
+      ]
+    }
+  }
+}
