@@ -7,7 +7,7 @@ from datasets import load_from_disk
 from trl import GRPOConfig, GRPOTrainer
 
 from searchlm.config import get_config, get_data_path
-from searchlm.workflows.rlhf.reward import RewardFunction
+from searchlm.rlhf.reward import RewardFunction
 
 
 def train(use_vllm_server: bool = False):
