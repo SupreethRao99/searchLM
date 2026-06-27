@@ -78,3 +78,10 @@ Thumbs.db
 .mypy_cache/
 .coverage
 htmlcov/
+
+# IDE / editor artifacts
+.ropeproject/
+.claude/
+
+# Local evaluation outputs (kept in reports/ when publishable)
+evaluation_output/

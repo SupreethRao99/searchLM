@@ -27,9 +27,28 @@ training:
   save_total_limit: 3
   vllm_gpu_memory_utilization: 0.25  # Reduced from 0.4 to give training more room
   wandb_run_name:
-    colocate: "searchlm-grpo-qwen2.5-3b"
-    server: "searchlm-grpo-qwen2.5-3b-server"
+    colocate: "searchlm-grpo-qwen2.5-3b-sft-init"
+    server: "searchlm-grpo-qwen2.5-3b-sft-init-server"
   
+# SFT warm-start (runs before GRPO)
+# Goal: teach format only (<reasoning>/<query> tags) — 1 epoch is sufficient.
+# LoRA adapter is merged into the base before GRPO so there's no PEFT overhead.
+sft:
+  dataset_hub_id: "Supreeth/nl2bm25-sft"
+  num_epochs: 1
+  batch_size: 2
+  gradient_accumulation_steps: 8    # effective batch = 16
+  learning_rate: 2e-4               # higher LR is fine for LoRA
+  warmup_ratio: 0.05
+  max_seq_length: 1024
+  logging_steps: 10
+  save_steps: 200
+  wandb_run_name: "searchlm-sft-qwen2.5-3b-lora"
+  use_wandb: true
+  # LoRA
+  lora_r: 16
+  lora_alpha: 32
+
 # Reward function
 reward:
   ndcg_weight: 0.6
@@ -73,3 +92,79 @@ paths:
 datasets:
   names: ["scifact", "nfcorpus"]
   splits: ["train", "dev", "test"]
+
+# ── V2 improvements ────────────────────────────────────────────────────────────
+
+# SFT v2: quality-filtered dataset (only examples where the generated query
+# actually retrieves at least one relevant document, ndcg_at_10 > 0)
+sft_v2:
+  dataset_hub_id: "Supreeth/nl2bm25-sft"
+  ndcg_threshold: 0.0        # keep examples with ndcg_at_10 strictly > this value
+  num_epochs: 1
+  batch_size: 2
+  gradient_accumulation_steps: 8
+  learning_rate: 2e-4
+  warmup_ratio: 0.05
+  max_seq_length: 1024
+  logging_steps: 10
+  save_steps: 200
+  wandb_run_name: "searchlm-sft-v2-qwen2.5-3b-filtered"
+  use_wandb: true
+  lora_r: 16
+  lora_alpha: 32
+
+# GRPO v2: expanded datasets + shaped reward
+datasets_v2:
+  # FiQA (financial Q&A) resists keyword-bag gaming — financial jargon precision required.
+  # ArguAna excluded: it has no train split (counter-argument retrieval is test-only by design).
+  names: ["nfcorpus", "scifact", "fiqa"]
+  # Cap FiQA at 3000 queries to balance with NFCorpus (2590) and prevent one dataset
+  # from dominating training time (~5500 → 3000 saves ~45 min on H100).
+  fiqa_max_train_queries: 3000
+
+training_v2:
+  learning_rate: 1e-6
+  num_epochs: 1               # 1 epoch: 8000 prompts × 8 generations = 64K completions,
+                              # enough diversity without 3× the wall time
+  batch_size:
+    colocate: 2               # H100 colocate: 2 keeps backward memory safe alongside vLLM
+    server: 8
+  gradient_accumulation_steps:
+    colocate: 8               # effective batch = 16 (2 × 8), same as before
+    server: 4
+  max_new_tokens: 1024        # was 2048; halves KV cache, speeds vLLM generation significantly
+  num_generations: 8          # was 2; more diversity prevents mode collapse
+  gradient_checkpointing: true
+  precision: "bf16"
+  torch_compile: false        # disabled: compiled backward materialises fp32 FFN buffers
+                              # (11008×2048 float32 = 90MB each) that eager+grad-checkpoint
+                              # avoids, causing OOM even at vllm_gpu_memory_utilization=0.30
+  logging_steps: 10
+  save_steps: 100             # was 50; fewer checkpoints = less I/O
+  save_total_limit: 3
+  vllm_gpu_memory_utilization: 0.30  # H100 80GB: vLLM gets 24GB KV cache, training gets
+                                     # 56GB (model 6GB + Adam states 24GB + gradients 6GB
+                                     # + 20GB buffer). 0.45 OOMed — Adam states are the
+                                     # killer, not activation memory.
+  vllm_max_model_length: 2048 # cap sequence length for vLLM; prompt ~512 + gen 1024 = 1536
+  wandb_run_name:
+    colocate: "searchlm-grpo-v2-qwen2.5-3b"
+    server: "searchlm-grpo-v2-qwen2.5-3b-server"
+
+reward_v2:
+  # Reward = complexity_mult * (ndcg_weight * max(0, NDCG - baseline) + mrr_weight * MRR)
+  #        + reasoning_bonus_weight * min(reasoning_tokens / reasoning_target_tokens, 1.0)
+  ndcg_weight: 0.6
+  mrr_weight: 0.4
+  eval_k: 100
+  split: "train"
+  # Keyword baseline: precomputed in data_prep; model must BEAT simple noun extraction
+  use_keyword_baseline: true
+  # Complexity soft penalty: queries with no boolean operators get this multiplier
+  # (0.5 means half reward — still gradient signal, but structure is incentivised)
+  complexity_soft_penalty: 0.5
+  # Hard gate: queries shorter than this get zero reward regardless
+  min_query_tokens: 3
+  # Reasoning depth bonus: caps at 1.0 when reasoning is reasoning_target_tokens long
+  reasoning_bonus_weight: 0.15
+  reasoning_target_tokens: 100

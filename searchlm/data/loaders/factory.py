@@ -8,14 +8,22 @@ dataset loader based on the dataset name.
 from pathlib import Path
 from typing import Optional
 
+from searchlm.data.loaders.arguana import ArguAnaLoader
 from searchlm.data.loaders.base import DatasetLoader
+from searchlm.data.loaders.fiqa import FiQALoader
+from searchlm.data.loaders.hotpotqa import HotpotQALoader
 from searchlm.data.loaders.nfcorpus import NFCorpusLoader
+from searchlm.data.loaders.nq import NQLoader
 from searchlm.data.loaders.scifact import SciFactLoader
 
 # Registry of available dataset loaders
 DATASET_LOADERS = {
     "nfcorpus": NFCorpusLoader,
     "scifact": SciFactLoader,
+    "fiqa": FiQALoader,
+    "arguana": ArguAnaLoader,
+    "hotpotqa": HotpotQALoader,
+    "nq": NQLoader,
 }
 
 

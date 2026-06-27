@@ -2,70 +2,59 @@
 
 import re
 
-SYSTEM_PROMPT = """
-You are an expert at generating boolean search queries for a search engine.
-You will be given a question in natural language and you need to generate a
-boolean search query for it.
-The boolean search query will be used in conjunction with a search engine to
-retrieve relevant documents.
-You should generate a query that is as specific as possible to the question,
-and that will return the most relevant documents.
-You should use the following operators: AND, OR, NOT.
+# Matches the system prompt used in SFT data generation so the fine-tuned
+# model's learned format (<reasoning>/<query>) is consistent with GRPO prompts.
+SYSTEM_PROMPT = """\
+You are an expert information retrieval specialist. Your job is to convert \
+natural language queries into high-quality Tantivy boolean search queries that \
+maximise retrieval of relevant documents.
 
-Below a few basic query formats are shown:
+## Tantivy Boolean Syntax Reference
 
-AND and OR conjunctions.
-query = '(Old AND Man) OR Stream'
+| Construct | Syntax | Example |
+|-----------|--------|---------|
+| Single term | `word` | cancer |
+| Exact phrase | `"two or more words"` | "bone density" |
+| Both required | `A AND B` | vitamin AND calcium |
+| Either matches | `A OR B` | cancer OR tumor OR malignancy |
+| Exclude term | `NOT A` | NOT review |
+| Grouping | `(A OR B) AND C` | (cat OR feline) AND behavior |
+| Field scope | `field:term` | title:"machine learning" |
+| Boost term | `term^2` | cancer^2 OR tumor |
 
-+(includes) and -(excludes) operators.
-query = '+Old +Man chef -fished'
+**Does NOT work:** wildcards (*), regex, fuzzy (~), numeric ranges, or any \
+non-indexed field names.
 
-phrase search.
-query = '"eighty-four days"'
+## Construction Strategy
 
-Think step by step and generate the query.
+1. Identify 2-4 core concepts in the query (ignore stop words)
+2. For each concept, collect domain synonyms and related terms
+3. Connect concepts with AND; connect synonyms with OR
+4. Quote multi-word concepts as phrases
+5. Scope high-precision terms to `title:` when central to the topic
 
-The output format should be as follows:
-<think>
-your reasoning here
-</think>
-<query>
-generated query here
-</query>
-"""
+## Output Format
 
-USER_PROMPT_TEMPLATE = """
-Translate the following question into a boolean search query:
-{question}
-"""
+You MUST respond in exactly this format - no other text:
+
+<reasoning>
+Identify the key concepts in the query. For each concept list candidate synonyms \
+and decide which to include. Explain your AND/OR structure choices.
+</reasoning>
+<query>your single-line boolean query here</query>"""
+
+USER_PROMPT_TEMPLATE = "Convert to a Tantivy boolean search query:\n\n{question}"
 
 
 def create_chat_prompt(query_text: str) -> list[dict]:
-    """
-    Create formatted chat prompt for query generation.
-
-    Args:
-        query_text: The query text to format
-
-    Returns:
-        List of chat messages
-    """
-    messages = [
+    """Return a chat-formatted prompt compatible with the SFT model."""
+    return [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": USER_PROMPT_TEMPLATE.format(question=query_text)},
     ]
-    return messages
 
 
 def extract_query_from_output(text: str) -> str:
-    """
-    Extract query from model output (between <query> tags).
-
-    Args:
-        text: Model output text
-
-    Returns:
-        Extracted query or original text if no tags found
-    """
+    """Extract boolean query from model output between <query> tags."""
     match = re.search(r"<query>\s*(.*?)\s*</query>", text, re.DOTALL)
     return match.group(1).strip() if match else text.strip()
